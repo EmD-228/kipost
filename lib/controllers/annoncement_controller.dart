@@ -110,18 +110,55 @@ class AnnouncementController extends GetxController {
         );
   }
 
-  Future<void> acceptAnnouncement(String id) async {
+  // Nouvelle méthode pour que le créateur sélectionne un prestataire
+  Future<void> selectServiceProvider(String announcementId, String selectedProposalId, String selectedUserId) async {
     try {
+      // Mettre à jour l'annonce avec le prestataire sélectionné
       await FirebaseFirestore.instance
           .collection('annonces')
-          .doc(id)
+          .doc(announcementId)
+          .update({
+            'status': 'attribuée',
+            'selectedProviderId': selectedUserId,
+            'selectedProposalId': selectedProposalId,
+          });
+
+      // Mettre à jour la proposition sélectionnée
+      await FirebaseFirestore.instance
+          .collection('proposals')
+          .doc(selectedProposalId)
           .update({'status': 'acceptée'});
-      Get.back();
-      Get.snackbar('Succès', 'Annonce acceptée !',
+
+      // Rejeter toutes les autres propositions
+      final otherProposals = await FirebaseFirestore.instance
+          .collection('proposals')
+          .where('announcementId', isEqualTo: announcementId)
+          .where('status', isEqualTo: 'en_attente')
+          .get();
+
+      for (var doc in otherProposals.docs) {
+        if (doc.id != selectedProposalId) {
+          await doc.reference.update({'status': 'refusée'});
+        }
+      }
+
+      Get.snackbar('Succès', 'Prestataire sélectionné !',
           backgroundColor: Colors.green.shade100, colorText: Colors.black);
     } catch (e) {
-      Get.snackbar('Erreur', 'Erreur lors de l\'acceptation : $e',
+      Get.snackbar('Erreur', 'Erreur lors de la sélection : $e',
           backgroundColor: Colors.red.shade100, colorText: Colors.black);
     }
+  }
+
+  // Méthode pour récupérer les propositions d'une annonce
+  Stream<List<Map<String, dynamic>>> getAnnouncementProposalsStream(String announcementId) {
+    return FirebaseFirestore.instance
+        .collection('proposals')
+        .where('announcementId', isEqualTo: announcementId)
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => {...doc.data(), 'id': doc.id})
+            .toList());
   }
 }

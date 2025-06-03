@@ -20,15 +20,25 @@ class Proposal {
   });
 
   factory Proposal.fromMap(Map<String, dynamic> map, String docId) {
-    return Proposal(
-      id: docId,
-      announcementId: map['announcementId'] ?? '',
-      userId: map['userId'] ?? '',
-      userEmail: map['userEmail'] ?? '',
-      message: map['message'] ?? '',
-      createdAt: map['createdAt'] != null ? (map['createdAt'] as Timestamp).toDate() : DateTime.now(),
-      status: map['status'] ?? 'en_attente',
-    );
+    print('🔍 DEBUG: Proposal.fromMap called with docId: $docId, map: $map');
+    
+    try {
+      final proposal = Proposal(
+        id: docId,
+        announcementId: map['announcementId'] ?? '',
+        userId: map['userId'] ?? '',
+        userEmail: map['userEmail'] ?? '',
+        message: map['message'] ?? '',
+        createdAt: map['createdAt'] != null ? (map['createdAt'] as Timestamp).toDate() : DateTime.now(),
+        status: map['status'] ?? 'en_attente',
+      );
+      
+      print('🔍 DEBUG: Proposal created successfully: ${proposal.id} - ${proposal.message}');
+      return proposal;
+    } catch (e) {
+      print('🔍 DEBUG: Error creating Proposal from map: $e');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toMap() {

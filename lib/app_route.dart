@@ -8,6 +8,8 @@ import 'screens/auth/forgot_password_screen.dart';
 import 'screens/announcement/create_announcement_screen.dart';
 import 'screens/announcement/announcement_list_screen.dart';
 import 'screens/announcement/announcement_detail_screen.dart';
+import 'screens/announcement/proposals_screen.dart';
+import 'screens/debug_proposals_screen.dart';
 
 class AppRoutes {
   static const String home = '/home';
@@ -19,6 +21,8 @@ class AppRoutes {
   static const String createAnnouncement = '/create-announcement';
   static const String announcementList = '/announcement-list';
   static const String announcementDetail = '/announcement-detail';
+  static const String proposals = '/proposals';
+  static const String debugProposals = '/debug-proposals';
 
   static final routes = [
     GetPage(name: home, page: () => const MyHomePage(title: 'Kipost Home')),
@@ -30,5 +34,7 @@ class AppRoutes {
     GetPage(name: createAnnouncement, page: () => const CreateAnnouncementScreen()),
     GetPage(name: announcementList, page: () => AnnouncementListScreen()),
     GetPage(name: announcementDetail, page: () => const AnnouncementDetailScreen()),
+    GetPage(name: proposals, page: () => const ProposalsScreen()),
+    GetPage(name: debugProposals, page: () => const DebugProposalsScreen()),
   ];
 }

@@ -5,20 +5,26 @@ import 'package:kipost/app_route.dart';
 class AuthController extends GetxController {
   static AuthController get to => Get.find();
   final Rxn<User> firebaseUser = Rxn<User>();
+  final RxBool isLoading = true.obs;
 
   @override
   void onInit() {
+    // Écouter les changements d'état d'authentification
     firebaseUser.bindStream(FirebaseAuth.instance.authStateChanges());
     ever(firebaseUser, _setInitialScreen);
     super.onInit();
   }
 
   void _setInitialScreen(User? user) {
-    if (user == null) {
-      Get.offAllNamed(AppRoutes.authWelcome);
-    } else {
-      Get.offAllNamed(AppRoutes.home);
-    }
+    // Petit délai pour éviter les conflits de navigation
+    Future.delayed(const Duration(milliseconds: 100), () {
+      isLoading.value = false;
+      if (user == null) {
+        Get.offAllNamed(AppRoutes.authWelcome);
+      } else {
+        Get.offAllNamed(AppRoutes.home);
+      }
+    });
   }
 
   Future<void> register(String email, String password) async {

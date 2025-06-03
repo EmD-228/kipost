@@ -4,7 +4,9 @@ import 'package:iconsax/iconsax.dart';
 import 'package:kipost/components/kipost_button.dart';
 import 'package:kipost/controllers/annoncement_controller.dart';
 import 'package:kipost/controllers/auth_controller.dart';
+import 'package:kipost/controllers/proposal_controller.dart';
 import 'package:kipost/models/announcement.dart';
+import 'package:kipost/screens/announcement/proposals_screen.dart';
 
 class AnnouncementDetailScreen extends StatelessWidget {
   const AnnouncementDetailScreen({super.key});
@@ -128,54 +130,9 @@ class AnnouncementDetailScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 32),
-                // Affiche le bouton "Accepter" seulement si ce n'est PAS le créateur
-                if (Get.find<AuthController>().firebaseUser.value?.uid !=
-                    ann.creatorId)
-                  KipostButton(
-                    label: 'Accepter cette annonce',
-                    icon: Iconsax.tick_circle,
-                    onPressed:
-                        ann.status == 'ouverte'
-                            ? () => Get.find<AnnouncementController>()
-                                .acceptAnnouncement(ann.id)
-                            : () {},
-                  ),
-                const SizedBox(height: 16),
-                // Affiche le bouton supprimer si c'est le créateur
-                if (Get.find<AuthController>().firebaseUser.value?.uid ==
-                    ann.creatorId)
-                  KipostButton(
-                    label: 'Supprimer',
-                    icon: Iconsax.trash,
-                    onPressed: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder:
-                            (ctx) => AlertDialog(
-                              title: const Text('Confirmation'),
-                              content: const Text('Supprimer cette annonce ?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, false),
-                                  child: const Text('Annuler'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, true),
-                                  child: const Text('Supprimer'),
-                                ),
-                              ],
-                            ),
-                      );
-                      if (confirm == true) {
-                        await Get.find<AnnouncementController>().deleteAnnouncement(
-                          ann.id,
-                        );
-                        Get.back();
-                      }
-                    },
-                    // Optionnel : couleur différente
-                    // style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  ),
+                
+                // Actions selon le rôle de l'utilisateur
+                ...(_buildUserActions(ann)),
               ],
             ),
           ),
@@ -183,4 +140,186 @@ class AnnouncementDetailScreen extends StatelessWidget {
       },
     );
   }
-}
+
+  List<Widget> _buildUserActions(Announcement ann) {
+    final currentUserId = Get.find<AuthController>().firebaseUser.value?.uid;
+    final isCreator = currentUserId == ann.creatorId;
+
+    if (isCreator) {
+      // Actions pour le créateur
+      return [
+        // Bouton voir les propositions
+        if (ann.status == 'ouverte')
+          KipostButton(
+            label: 'Voir les propositions',
+            icon: Iconsax.document_text,
+            onPressed: () => Get.to(() => const ProposalsScreen(), arguments: ann),
+          ),
+        
+        if (ann.status == 'ouverte') const SizedBox(height: 16),
+        
+        // Bouton supprimer
+        KipostButton(
+          label: 'Supprimer',
+          icon: Iconsax.trash,
+          onPressed: () async {
+            final confirm = await showDialog<bool>(
+              context: Get.context!,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Confirmation'),
+                content: const Text('Supprimer cette annonce ?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('Annuler'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('Supprimer'),
+                  ),
+                ],
+              ),
+            );
+            if (confirm == true) {
+              await Get.find<AnnouncementController>().deleteAnnouncement(ann.id);
+              Get.back();
+            }
+          },
+        ),
+      ];
+    } else {
+      // Actions pour les prestataires potentiels
+      return [
+        if (ann.status == 'ouverte')
+          FutureBuilder<bool>(
+            future: Get.put(ProposalController()).hasUserAlreadyApplied(ann.id),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              }
+
+              final hasApplied = snapshot.data ?? false;
+
+              if (hasApplied) {
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Iconsax.clock, color: Colors.orange.shade600),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Proposition envoyée',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.orange.shade700,
+                              ),
+                            ),
+                            Text(
+                              'Vous avez déjà postulé pour cette annonce',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.orange.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return KipostButton(
+                label: 'Postuler pour cette annonce',
+                icon: Iconsax.send_1,
+                onPressed: () => _showProposalDialog(ann.id),
+              );
+            },
+          )
+        else
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Row(
+              children: [
+                Icon(Iconsax.lock, color: Colors.grey.shade600),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    ann.status == 'attribuée' 
+                        ? 'Cette annonce a été attribuée'
+                        : 'Cette annonce n\'est plus disponible',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ];
+    }
+  }
+
+  void _showProposalDialog(String announcementId) {
+    final TextEditingController messageController = TextEditingController();
+    
+    showDialog(
+      context: Get.context!,
+      builder: (context) => AlertDialog(
+        title: const Text('Postuler pour cette annonce'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Expliquez pourquoi vous êtes la bonne personne pour ce travail :'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: messageController,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                hintText: 'Décrivez votre expérience, vos compétences...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (messageController.text.trim().isNotEmpty) {
+                await Get.put(ProposalController()).sendProposal(
+                  announcementId: announcementId,
+                  message: messageController.text.trim(),
+                );
+                Navigator.pop(context);
+                // Rafraîchir l'état de la page
+                (Get.context as Element).markNeedsBuild();
+              }
+            },
+            child: const Text('Envoyer'),
+          ),
+        ],
+      ),
+    );
+  }
+  }
+
