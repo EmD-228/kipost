@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class KipostButton extends StatelessWidget {
   final String label;
-  final VoidCallback? onPressed;
+  final void Function()? onPressed;
   final bool loading;
   final IconData? icon;
 

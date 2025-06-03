@@ -34,9 +34,9 @@ class AuthWelcomeScreen extends StatelessWidget {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.deepPurple.withOpacity(0.3),
-                            blurRadius: 30,
-                            offset: const Offset(0, 15),
+                            color: Colors.deepPurple.withOpacity(0.15),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
@@ -92,9 +92,9 @@ class AuthWelcomeScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.deepPurple.withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
+                            color: Colors.deepPurple.withOpacity(0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
@@ -144,9 +144,9 @@ class AuthWelcomeScreen extends StatelessWidget {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
