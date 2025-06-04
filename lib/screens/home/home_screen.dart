@@ -82,6 +82,19 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Icon(Iconsax.notification, color: Colors.deepPurple, size: 20),
             ),
             const SizedBox(width: 12),
+            // Bouton temporaire pour la migration
+            IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Iconsax.setting_2, color: Colors.orange.shade600, size: 18),
+              ),
+              tooltip: 'Migration BD',
+              onPressed: () => Get.toNamed('/migration'),
+            ),
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(

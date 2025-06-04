@@ -178,6 +178,72 @@ class _ProposalsTabState extends State<ProposalsTab> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Informations sur l'annonce
+            if (proposal.announcement != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.deepPurple.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Iconsax.briefcase, size: 16, color: Colors.deepPurple),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Annonce concernée',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepPurple,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      proposal.announcement!.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Iconsax.category, size: 12, color: Colors.grey.shade600),
+                        const SizedBox(width: 4),
+                        Text(
+                          proposal.announcement!.category,
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Icon(Iconsax.location, size: 12, color: Colors.grey.shade600),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            proposal.announcement!.location,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             Text(
               'Message:',
               style: TextStyle(

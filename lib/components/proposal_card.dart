@@ -62,12 +62,51 @@ class ProposalCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Annonce ID: ${proposal.announcementId.substring(0, 8)}...',
+                          proposal.announcement?.title ?? 'Annonce ID: ${proposal.announcementId.substring(0, 8)}...',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
+                        if (proposal.announcement != null) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Iconsax.category,
+                                size: 12,
+                                color: Colors.grey.shade500,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                proposal.announcement!.category,
+                                style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Icon(
+                                Iconsax.location,
+                                size: 12,
+                                color: Colors.grey.shade500,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  proposal.announcement!.location,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade500,
+                                    fontSize: 12,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),

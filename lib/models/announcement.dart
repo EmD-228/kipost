@@ -10,6 +10,7 @@ class Announcement {
   final String creatorId;
   final String creatorEmail;
   final DateTime createdAt;
+  final List<String> proposalIds; // Liste des IDs des propositions
 
   Announcement({
     required this.id,
@@ -21,6 +22,7 @@ class Announcement {
     required this.creatorId,
     required this.creatorEmail,
     required this.createdAt,
+    this.proposalIds = const [],
   });
 
   factory Announcement.fromMap(Map<String, dynamic> map, String docId) {
@@ -36,6 +38,7 @@ class Announcement {
       createdAt: (map['createdAt'] != null)
           ? (map['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
+      proposalIds: List<String>.from(map['proposalIds'] ?? []),
     );
   }
 
@@ -49,6 +52,7 @@ class Announcement {
       'creatorId': creatorId,
       'creatorEmail': creatorEmail,
       'createdAt': createdAt,
+      'proposalIds': proposalIds,
     };
   }
 }
