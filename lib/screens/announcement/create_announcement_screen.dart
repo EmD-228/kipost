@@ -69,7 +69,19 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic));
     
+    // Add listeners to text controllers to update UI in real-time
+    _titleController.addListener(_updateStepValidation);
+    _descriptionController.addListener(_updateStepValidation);
+    _locationController.addListener(_updateStepValidation);
+    
     _animationController.forward();
+  }
+
+  // Method to force UI update when text fields change
+  void _updateStepValidation() {
+    setState(() {
+      // This will trigger a rebuild and update the button states
+    });
   }
 
   @override
@@ -77,6 +89,12 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen>
     _animationController.dispose();
     _stepAnimationController.dispose();
     _pageController.dispose();
+    
+    // Remove listeners before disposing controllers
+    _titleController.removeListener(_updateStepValidation);
+    _descriptionController.removeListener(_updateStepValidation);
+    _locationController.removeListener(_updateStepValidation);
+    
     _titleController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
@@ -85,7 +103,32 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen>
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    // Validate form and required selections
+
+    
+    // Ensure all required fields are selected
+    if (_selectedCategory == null) {
+      Get.snackbar(
+        'Erreur',
+        'Veuillez sélectionner une catégorie',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+    
+    if (_selectedUrgency == null) {
+      Get.snackbar(
+        'Erreur',
+        'Veuillez sélectionner un niveau d\'urgence',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+    
     await _announcementController.createAnnouncement(
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
@@ -95,6 +138,11 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen>
   }
 
   void _nextStep() {
+    // Validate current step before proceeding
+    if (!_canProceedFromStep(_currentStep)) {
+      return;
+    }
+    
     if (_currentStep < 2) {
       setState(() => _currentStep++);
       _stepAnimationController.reset();
@@ -104,7 +152,14 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen>
         curve: Curves.easeInOutCubic,
       );
     } else {
-      setState(() => _showPreview = true);
+      // Before showing preview, ensure all steps are completed
+      if (_selectedCategory != null && 
+          _titleController.text.trim().isNotEmpty &&
+          _descriptionController.text.trim().isNotEmpty &&
+          _locationController.text.trim().isNotEmpty &&
+          _selectedUrgency != null) {
+        setState(() => _showPreview = true);
+      }
     }
   }
 
@@ -127,9 +182,14 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen>
       case 0:
         return _selectedCategory != null;
       case 1:
-        return _titleController.text.isNotEmpty && 
-               _descriptionController.text.isNotEmpty &&
-               _locationController.text.isNotEmpty;
+        // Check if required fields are not empty and trimmed
+        final title = _titleController.text.trim();
+        final description = _descriptionController.text.trim();
+        final location = _locationController.text.trim();
+        
+        return title.isNotEmpty && 
+               description.isNotEmpty &&
+               location.isNotEmpty;
       case 2:
         return _selectedUrgency != null;
       default:

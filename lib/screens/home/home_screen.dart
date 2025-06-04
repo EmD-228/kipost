@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:get/get.dart';
 import 'package:kipost/controllers/auth_controller.dart';
+import 'package:kipost/controllers/annoncement_controller.dart';
+import 'package:kipost/controllers/proposal_controller.dart';
 import 'package:kipost/components/home/jobs_tab.dart';
 import 'package:kipost/components/home/proposals_tab.dart';
 import 'package:kipost/components/home/feature_tabs.dart';
@@ -94,6 +96,29 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               tooltip: 'Migration BD',
               onPressed: () => Get.toNamed('/migration'),
+            ),
+            const SizedBox(width: 8),
+            // Bouton temporaire pour diagnostic et correction
+            IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Iconsax.health, color: Colors.blue.shade600, size: 18),
+              ),
+              tooltip: 'Diagnostic système',
+              onPressed: () async {
+                final announcementController = Get.find<AnnouncementController>();
+                final proposalController = Get.find<ProposalController>();
+                
+                // Diagnostic du système
+                await proposalController.diagnoseProposalSystem();
+                
+                // Correction des annonces sans proposalIds
+                await announcementController.ensureProposalIdsField();
+              },
             ),
             Container(
               padding: const EdgeInsets.all(8),

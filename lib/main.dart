@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
 import 'package:kipost/app_route.dart';
 import 'package:kipost/controllers/annoncement_controller.dart';
+import 'package:kipost/controllers/proposal_controller.dart';
 import 'package:kipost/firebase_options.dart';
 import 'package:kipost/screens/auth/auth_screen.dart';
 import 'controllers/auth_controller.dart';
@@ -23,6 +24,9 @@ class MyApp extends StatelessWidget {
     // Initialisation des contrôleurs
     Get.put(AuthController());
     Get.put(AnnouncementController());
+    Get.put(ProposalController());
+
+
 
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,

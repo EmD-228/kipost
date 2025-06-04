@@ -9,6 +9,7 @@ class KipostTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final VoidCallback? onTap;
   final bool readOnly;
+  final int? maxLines;
 
   const KipostTextField({
     super.key,
@@ -20,6 +21,7 @@ class KipostTextField extends StatelessWidget {
     this.validator,
     this.onTap,
     this.readOnly = false,
+    this.maxLines = 1,
   });
 
   @override
@@ -33,6 +35,7 @@ class KipostTextField extends StatelessWidget {
         validator: validator,
         onTap: onTap,
         readOnly: readOnly,
+        maxLines: maxLines,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: icon != null ? Icon(

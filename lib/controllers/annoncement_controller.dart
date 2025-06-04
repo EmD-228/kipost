@@ -28,6 +28,7 @@ class AnnouncementController extends GetxController {
         'status': 'ouverte',
         'creatorId': user?.uid,
         'creatorEmail': user?.email,
+        'proposalIds': [], // Initialize empty list for proposal IDs
       });
       loading.value = false;
       Get.back();
@@ -160,5 +161,48 @@ class AnnouncementController extends GetxController {
         .map((snapshot) => snapshot.docs
             .map((doc) => {...doc.data(), 'id': doc.id})
             .toList());
+  }
+
+  // Méthode utilitaire pour s'assurer que toutes les annonces ont le champ proposalIds
+  Future<void> ensureProposalIdsField() async {
+    try {
+      final announcements = await FirebaseFirestore.instance
+          .collection('annonces')
+          .get();
+      
+      final batch = FirebaseFirestore.instance.batch();
+      int updatedCount = 0;
+      
+      for (final doc in announcements.docs) {
+        final data = doc.data();
+        if (!data.containsKey('proposalIds')) {
+          batch.update(doc.reference, {
+            'proposalIds': [],
+          });
+          updatedCount++;
+        }
+      }
+      
+      if (updatedCount > 0) {
+        await batch.commit();
+        print('Updated $updatedCount announcements with proposalIds field');
+        Get.snackbar(
+          'Migration',
+          'Mis à jour $updatedCount annonces avec le champ proposalIds',
+          backgroundColor: Colors.blue.shade100,
+          colorText: Colors.black,
+        );
+      } else {
+        print('All announcements already have proposalIds field');
+      }
+    } catch (e) {
+      print('Error ensuring proposalIds field: $e');
+      Get.snackbar(
+        'Erreur',
+        'Erreur lors de la vérification : $e',
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.black,
+      );
+    }
   }
 }

@@ -18,7 +18,7 @@ class ProposalController extends GetxController {
     try {
       // Récupérer les données de l'annonce
       final announcementDoc = await FirebaseFirestore.instance
-          .collection('announcements')
+          .collection('annonces')
           .doc(proposal.announcementId)
           .get();
       
@@ -102,7 +102,7 @@ class ProposalController extends GetxController {
 
       // Récupérer les données de l'annonce
       final announcementDoc = await FirebaseFirestore.instance
-          .collection('announcements')
+          .collection('annonces')
           .doc(announcementId)
           .get();
       
@@ -134,7 +134,7 @@ class ProposalController extends GetxController {
       batch.set(proposalRef, proposalData);
       
       // Mettre à jour l'annonce pour ajouter l'ID de la proposition
-      final announcementRef = FirebaseFirestore.instance.collection('announcements').doc(announcementId);
+      final announcementRef = FirebaseFirestore.instance.collection('annonces').doc(announcementId);
       batch.update(announcementRef, {
         'proposalIds': FieldValue.arrayUnion([proposalRef.id]),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -162,8 +162,8 @@ class ProposalController extends GetxController {
     
     // Nouvelle approche plus efficace : récupérer les annonces avec leurs proposalIds
     return FirebaseFirestore.instance
-        .collection('announcements')
-        .where('userId', isEqualTo: user?.uid)
+        .collection('annonces')
+        .where('creatorId', isEqualTo: user?.uid)
         .snapshots()
         .asyncMap((announcementSnapshot) async {
           if (announcementSnapshot.docs.isEmpty) {
@@ -239,8 +239,8 @@ class ProposalController extends GetxController {
     
     // D'abord, on récupère les annonces de l'utilisateur connecté
     return FirebaseFirestore.instance
-        .collection('announcements')
-        .where('userId', isEqualTo: user?.uid)
+        .collection('annonces')
+        .where('creatorId', isEqualTo: user?.uid)
         .snapshots()
         .asyncExpand((announcementSnapshot) {
           if (announcementSnapshot.docs.isEmpty) {
@@ -292,6 +292,55 @@ class ProposalController extends GetxController {
     } catch (e) {
       print('🔍 DEBUG: Error updating proposal status: $e');
       throw e;
+    }
+  }
+
+  // Méthode de diagnostic pour vérifier l'état des données
+  Future<void> diagnoseProposalSystem() async {
+    final user = FirebaseAuth.instance.currentUser;
+    print('🔍 DIAGNOSTIC: Starting proposal system diagnosis for user: ${user?.uid}');
+    
+    try {
+      // Vérifier les annonces de l'utilisateur
+      final userAnnouncements = await FirebaseFirestore.instance
+          .collection('annonces')
+          .where('creatorId', isEqualTo: user?.uid)
+          .get();
+      
+      print('🔍 DIAGNOSTIC: Found ${userAnnouncements.docs.length} announcements for user');
+      
+      for (final doc in userAnnouncements.docs) {
+        final data = doc.data();
+        print('🔍 DIAGNOSTIC: Announcement ${doc.id}:');
+        print('  - Title: ${data['title']}');
+        print('  - Has proposalIds: ${data.containsKey('proposalIds')}');
+        if (data.containsKey('proposalIds')) {
+          final proposalIds = List<String>.from(data['proposalIds'] ?? []);
+          print('  - ProposalIds count: ${proposalIds.length}');
+          print('  - ProposalIds: $proposalIds');
+        }
+      }
+      
+      // Vérifier les propositions reçues
+      final allProposals = await FirebaseFirestore.instance
+          .collection('proposals')
+          .get();
+      
+      print('🔍 DIAGNOSTIC: Total proposals in database: ${allProposals.docs.length}');
+      
+      // Compter les propositions par annonce
+      final proposalsByAnnouncement = <String, int>{};
+      for (final doc in allProposals.docs) {
+        final announcementId = doc.data()['announcementId'] as String?;
+        if (announcementId != null) {
+          proposalsByAnnouncement[announcementId] = (proposalsByAnnouncement[announcementId] ?? 0) + 1;
+        }
+      }
+      
+      print('🔍 DIAGNOSTIC: Proposals by announcement: $proposalsByAnnouncement');
+      
+    } catch (e) {
+      print('🔍 DIAGNOSTIC ERROR: $e');
     }
   }
 }

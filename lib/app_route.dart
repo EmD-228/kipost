@@ -9,6 +9,7 @@ import 'screens/announcement/create_announcement_screen.dart';
 import 'screens/announcement/announcement_list_screen.dart';
 import 'screens/announcement/announcement_detail_screen.dart';
 import 'screens/announcement/proposals_screen.dart';
+import 'screens/proposal/proposal_accepted_screen.dart';
 import 'screens/debug_proposals_screen.dart';
 import 'screens/migration_page.dart';
 
@@ -23,6 +24,7 @@ class AppRoutes {
   static const String announcementList = '/announcement-list';
   static const String announcementDetail = '/announcement-detail';
   static const String proposals = '/proposals';
+  static const String proposalAccepted = '/proposal-accepted';
   static const String debugProposals = '/debug-proposals';
   static const String migration = '/migration';
 
@@ -37,6 +39,7 @@ class AppRoutes {
     GetPage(name: announcementList, page: () => AnnouncementListScreen()),
     GetPage(name: announcementDetail, page: () => const AnnouncementDetailScreen()),
     GetPage(name: proposals, page: () => const ProposalsScreen()),
+    GetPage(name: proposalAccepted, page: () => ProposalAcceptedScreen(proposal: Get.arguments)),
     GetPage(name: debugProposals, page: () => const DebugProposalsScreen()),
     GetPage(name: migration, page: () => const MigrationPage()),
   ];

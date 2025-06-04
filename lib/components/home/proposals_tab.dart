@@ -282,7 +282,7 @@ class _ProposalsTabState extends State<ProposalsTab> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                _updateProposalStatus(proposal.id, 'acceptée');
+                _acceptProposal(proposal);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
@@ -315,6 +315,12 @@ class _ProposalsTabState extends State<ProposalsTab> {
         colorText: Colors.white,
       );
     });
+  }
+
+  // Accepter une proposition et rediriger vers la page de planification
+  void _acceptProposal(Proposal proposal) {
+    // Rediriger vers la page de planification intégrée
+    Get.toNamed('/proposal-accepted', arguments: proposal);
   }
 
   // Obtenir la couleur selon le statut
