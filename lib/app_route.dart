@@ -6,7 +6,7 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/announcement/create_announcement_simple.dart';
-import 'screens/announcement/announcement_list_screen.dart';
+// import 'screens/announcement/announcement_list_screen.dart';
 import 'screens/announcement/announcement_detail_screen.dart';
 import 'screens/announcement/proposals_screen.dart';
 import 'screens/proposal/proposal_accepted_screen.dart';
@@ -38,7 +38,7 @@ class AppRoutes {
     GetPage(name: register, page: () => const RegisterScreen()),
     GetPage(name: forgotPassword, page: () => const ForgotPasswordScreen()),
     GetPage(name: createAnnouncement, page: () => const CreateAnnouncementSimpleScreen()),
-    GetPage(name: announcementList, page: () => AnnouncementListScreen()),
+    // GetPage(name: announcementList, page: () => AnnouncementListScreen()),
     GetPage(name: announcementDetail, page: () => const AnnouncementDetailScreen()),
     GetPage(name: proposals, page: () => const ProposalsScreen()),
     GetPage(name: proposalAccepted, page: () => ProposalAcceptedScreen(proposal: Get.arguments)),

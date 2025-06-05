@@ -17,11 +17,9 @@ class Announcement {
   final DateTime updatedAt;
   final List<String> proposalIds; // Liste des IDs des propositions
   final double? price; // Prix/Budget estimé (optionnel)
-  final String budget; // Budget en string pour compatibilité
   
   // Objets relationnels
-  final UserModel? creator; // Créateur de l'annonce
-  final List<Map<String, dynamic>>? proposals; // Liste des propositions en format Map
+  final UserModel? creatorProfile; // Profil du créateur de l'annonce
 
   Announcement({
     required this.id,
@@ -37,9 +35,7 @@ class Announcement {
     required this.updatedAt,
     this.proposalIds = const [],
     this.price,
-    this.budget = '0',
-    this.creator,
-    this.proposals,
+    this.creatorProfile,
   });
 
   factory Announcement.fromMap(Map<String, dynamic> map, String docId) {
@@ -61,12 +57,8 @@ class Announcement {
           : DateTime.now(),
       proposalIds: List<String>.from(map['proposalIds'] ?? []),
       price: map['price']?.toDouble(),
-      budget: map['budget']?.toString() ?? '0',
-      creator: map['creator'] != null 
-          ? UserModel.fromMap(map['creator'], map['creatorId'] ?? '') 
-          : null,
-      proposals: map['proposals'] != null 
-          ? List<Map<String, dynamic>>.from(map['proposals'])
+      creatorProfile: map['creatorProfile'] != null 
+          ? UserModel.fromMap(map['creatorProfile'], map['creatorId'] ?? '') 
           : null,
     );
   }
@@ -85,9 +77,7 @@ class Announcement {
       'updatedAt': updatedAt,
       'proposalIds': proposalIds,
       'price': price,
-      'budget': budget,
-      'creator': creator?.toMap(),
-      'proposals': proposals,
+      'creatorProfile': creatorProfile?.toMap(),
     };
   }
 
@@ -106,9 +96,7 @@ class Announcement {
     DateTime? updatedAt,
     List<String>? proposalIds,
     double? price,
-    String? budget,
-    UserModel? creator,
-    List<Map<String, dynamic>>? proposals,
+    UserModel? creatorProfile,
   }) {
     return Announcement(
       id: id ?? this.id,
@@ -124,16 +112,14 @@ class Announcement {
       updatedAt: updatedAt ?? this.updatedAt,
       proposalIds: proposalIds ?? this.proposalIds,
       price: price ?? this.price,
-      budget: budget ?? this.budget,
-      creator: creator ?? this.creator,
-      proposals: proposals ?? this.proposals,
+      creatorProfile: creatorProfile ?? this.creatorProfile,
     );
   }
 
   // Méthodes utilitaires
   bool get isOpen => status == 'open' || status == 'ouverte';
   bool get isClosed => status == 'closed' || status == 'fermee';
-  int get proposalCount => proposals?.length ?? proposalIds.length;
+  int get proposalCount => proposalIds.length;
   
   // Créer une annonce avec des données de test
   static Announcement createMockAnnouncement({
@@ -154,7 +140,7 @@ class Announcement {
                     Category.getCategoryById('autre')!;
     final urgencyLevel = UrgencyLevel.getUrgencyById('modere')!;
     
-    final creator = UserModel(
+    final creatorProfile = UserModel(
       id: 'mock_creator_${id ?? 'default'}',
       name: creatorName ?? 'Akosua Gyasi',
       email: 'creator@example.com',
@@ -171,13 +157,12 @@ class Announcement {
       urgencyLevel: urgencyLevel,
       location: location ?? 'Yopougon, Abidjan',
       status: status ?? 'open',
-      creatorId: creator.id,
-      creatorEmail: creator.email,
+      creatorId: creatorProfile.id,
+      creatorEmail: creatorProfile.email,
       createdAt: createdAt ?? now,
       updatedAt: now,
-      budget: budget ?? '40000',
       price: double.tryParse(budget ?? '40000'),
-      creator: creator,
+      creatorProfile: creatorProfile,
       proposalIds: List.generate(proposalCount ?? 0, (index) => 'proposal_$index'),
     );
   }

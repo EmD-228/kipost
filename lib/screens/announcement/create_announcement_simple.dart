@@ -110,8 +110,8 @@ class _CreateAnnouncementSimpleScreenState extends State<CreateAnnouncementSimpl
       await _announcementController.createAnnouncement(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
-        category: _selectedCategory!, // Maintenant c'est l'ID de la catégorie
-        urgencyLevel: _selectedUrgency!, // Maintenant c'est l'ID du niveau d'urgence
+        categoryId: _selectedCategory!, // ID de la catégorie
+        urgencyLevelId: _selectedUrgency!, // ID du niveau d'urgence
         location: _locationController.text.trim(),
         price: parsedPrice,
       );
