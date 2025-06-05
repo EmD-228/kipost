@@ -12,6 +12,7 @@ import 'screens/announcement/proposals_screen.dart';
 import 'screens/proposal/proposal_accepted_screen.dart';
 import 'screens/debug_proposals_screen.dart';
 import 'screens/migration_page.dart';
+import 'screens/notifications/notifications_screen.dart';
 
 class AppRoutes {
   static const String home = '/home';
@@ -27,6 +28,7 @@ class AppRoutes {
   static const String proposalAccepted = '/proposal-accepted';
   static const String debugProposals = '/debug-proposals';
   static const String migration = '/migration';
+  static const String notifications = '/notifications';
 
   static final routes = [
     GetPage(name: home, page: () => const MyHomePage(title: 'Kipost Home')),
@@ -42,5 +44,6 @@ class AppRoutes {
     GetPage(name: proposalAccepted, page: () => ProposalAcceptedScreen(proposal: Get.arguments)),
     GetPage(name: debugProposals, page: () => const DebugProposalsScreen()),
     GetPage(name: migration, page: () => const MigrationPage()),
+    GetPage(name: notifications, page: () => const NotificationsScreen()),
   ];
 }

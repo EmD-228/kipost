@@ -6,6 +6,7 @@ import 'package:kipost/app_route.dart';
 import 'package:kipost/controllers/annoncement_controller.dart';
 import 'package:kipost/controllers/proposal_controller.dart';
 import 'package:kipost/controllers/calendar_controller.dart';
+import 'package:kipost/controllers/notification_controller.dart';
 import 'package:kipost/firebase_options.dart';
 import 'package:kipost/screens/auth/auth_screen.dart';
 import 'controllers/auth_controller.dart';
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
     Get.put(AnnouncementController());
     Get.put(ProposalController());
     Get.put(CalendarController());
+    Get.put(NotificationController());
 
 
 

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:get/get.dart';
-import 'package:kipost/controllers/auth_controller.dart';
-import 'package:kipost/controllers/annoncement_controller.dart';
-import 'package:kipost/controllers/proposal_controller.dart';
 import 'package:kipost/components/home/jobs_tab.dart';
 import 'package:kipost/components/home/proposals_tab.dart';
+import 'package:kipost/components/home/profile_tab.dart';
 import 'package:kipost/components/home/feature_tabs.dart';
 import 'package:kipost/components/home/nav_icon.dart';
+import 'package:kipost/controllers/notification_controller.dart';
+import 'package:kipost/app_route.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -35,9 +35,7 @@ class _MyHomePageState extends State<MyHomePage> {
       case 2:
         return const CalendrierTab();
       case 3:
-        return const MessagesTab();
-      case 4:
-        return const NotificationsTab();
+        return const ProfileTab();
       default:
         return const JobsTab();
     }
@@ -65,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Text(
-                "Kipost",
+                "_Kipost",
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -75,103 +73,107 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             const Spacer(),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.deepPurple.shade50,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Iconsax.notification, color: Colors.deepPurple, size: 20),
-            ),
-            const SizedBox(width: 12),
-            // Bouton temporaire pour la migration
-            IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  shape: BoxShape.circle,
+            // Icône de notification avec compteur
+            Obx(() {
+              final notificationController = Get.find<NotificationController>();
+              final unreadCount = notificationController.unreadCount;
+              
+              return GestureDetector(
+                onTap: () => Get.toNamed(AppRoutes.notifications),
+                child: Badge(
+                  isLabelVisible: unreadCount > 0,
+                  label: Text(
+                    unreadCount > 99 ? '99+' : unreadCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  backgroundColor: Colors.red,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Iconsax.notification,
+                      color: Colors.deepPurple,
+                      size: 24,
+                    ),
+                  ),
                 ),
-                child: Icon(Iconsax.setting_2, color: Colors.orange.shade600, size: 18),
-              ),
-              tooltip: 'Migration BD',
-              onPressed: () => Get.toNamed('/migration'),
-            ),
-            const SizedBox(width: 8),
-            // Bouton temporaire pour diagnostic et correction
-            IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Iconsax.health, color: Colors.blue.shade600, size: 18),
-              ),
-              tooltip: 'Diagnostic système',
-              onPressed: () async {
-                final announcementController = Get.find<AnnouncementController>();
-                final proposalController = Get.find<ProposalController>();
-                
-                // Diagnostic du système
-                await proposalController.diagnoseProposalSystem();
-                
-                // Correction des annonces sans proposalIds
-                await announcementController.ensureProposalIdsField();
-              },
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.deepPurple.shade100, Colors.deepPurple.shade50],
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Iconsax.user, color: Colors.deepPurple, size: 20),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Iconsax.logout, color: Colors.red.shade600, size: 18),
-              ),
-              tooltip: 'Déconnexion',
-              onPressed: () => AuthController.to.logout(),
-            ),
+              );
+            }),
+         
+
           ],
         ),
       ),
       body: _getSelectedTab(),
-      floatingActionButton: _selectedIndex == 0
-          ? Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.deepPurple, Colors.deepPurple.shade300],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.deepPurple.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
+      floatingActionButton:
+          _selectedIndex == 0
+              ? Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.deepPurple, Colors.deepPurple.shade300],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
-              ),
-              child: FloatingActionButton(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                child: const Icon(Iconsax.add, color: Colors.white, size: 28),
-                onPressed: () => Get.toNamed('/create-announcement'),
-              ),
-            )
-          : null,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.deepPurple.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: FloatingActionButton(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  child: const Icon(Iconsax.add, color: Colors.white, size: 28),
+                  onPressed: () => Get.toNamed('/create-announcement'),
+                ),
+              )
+              : _selectedIndex == 2
+              ? Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.orange, Colors.orange.shade300],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.orange.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: FloatingActionButton(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  child: const Icon(
+                    Iconsax.calendar_add,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                  onPressed: () {
+                    // TODO: Implémenter l'ajout d'événement
+                    Get.snackbar(
+                      'Calendrier',
+                      'Fonctionnalité d\'ajout d\'événement à venir',
+                      backgroundColor: Colors.orange.shade100,
+                      colorText: Colors.orange.shade800,
+                    );
+                  },
+                ),
+              )
+              : null,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -222,19 +224,11 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             BottomNavigationBarItem(
               icon: NavIcon(
-                icon: Iconsax.message,
+                icon: Iconsax.user,
                 index: 3,
                 selectedIndex: _selectedIndex,
               ),
-              label: 'Messages',
-            ),
-            BottomNavigationBarItem(
-              icon: NavIcon(
-                icon: Iconsax.notification,
-                index: 4,
-                selectedIndex: _selectedIndex,
-              ),
-              label: 'Notifications',
+              label: 'Profil',
             ),
           ],
         ),
@@ -242,4 +236,3 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-

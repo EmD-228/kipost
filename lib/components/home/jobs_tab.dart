@@ -14,7 +14,13 @@ class JobsTab extends StatefulWidget {
 
 class _JobsTabState extends State<JobsTab> {
   final List<String> _categories = [
-    'Toutes', 'Menuiserie', 'Plomberie', 'Électricité', 'Aide ménagère', 'Transport', 'Autre',
+    'Toutes',
+    'Menuiserie',
+    'Plomberie',
+    'Électricité',
+    'Aide ménagère',
+    'Transport',
+    'Autre',
   ];
   String _selectedCategory = 'Toutes';
 
@@ -31,7 +37,8 @@ class _JobsTabState extends State<JobsTab> {
     {
       'id': '1',
       'title': 'Réparation de plomberie urgente',
-      'description': 'Recherche plombier qualifié pour réparer une fuite d\'eau dans la cuisine. Intervention rapide souhaitée.',
+      'description':
+          'Recherche plombier qualifié pour réparer une fuite d\'eau dans la cuisine. Intervention rapide souhaitée.',
       'category': 'Plomberie',
       'status': 'ouverte',
       'location': 'Cocody, Abidjan',
@@ -44,7 +51,8 @@ class _JobsTabState extends State<JobsTab> {
     {
       'id': '2',
       'title': 'Installation électrique complète',
-      'description': 'Installation électrique pour un nouveau bureau. Recherche électricien certifié avec expérience.',
+      'description':
+          'Installation électrique pour un nouveau bureau. Recherche électricien certifié avec expérience.',
       'category': 'Électricité',
       'status': 'ouverte',
       'location': 'Plateau, Abidjan',
@@ -57,7 +65,8 @@ class _JobsTabState extends State<JobsTab> {
     {
       'id': '3',
       'title': 'Fabrication de meubles sur mesure',
-      'description': 'Besoin d\'un menuisier pour fabriquer des meubles sur mesure pour ma nouvelle maison.',
+      'description':
+          'Besoin d\'un menuisier pour fabriquer des meubles sur mesure pour ma nouvelle maison.',
       'category': 'Menuiserie',
       'status': 'fermée',
       'location': 'Marcory, Abidjan',
@@ -70,7 +79,8 @@ class _JobsTabState extends State<JobsTab> {
     {
       'id': '4',
       'title': 'Service de ménage hebdomadaire',
-      'description': 'Recherche aide ménagère fiable pour entretien hebdomadaire d\'un appartement 3 pièces.',
+      'description':
+          'Recherche aide ménagère fiable pour entretien hebdomadaire d\'un appartement 3 pièces.',
       'category': 'Aide ménagère',
       'status': 'ouverte',
       'location': 'Yopougon, Abidjan',
@@ -83,7 +93,8 @@ class _JobsTabState extends State<JobsTab> {
     {
       'id': '5',
       'title': 'Transport de déménagement',
-      'description': 'Besoin d\'un service de transport pour déménagement complet d\'un appartement 2 pièces.',
+      'description':
+          'Besoin d\'un service de transport pour déménagement complet d\'un appartement 2 pièces.',
       'category': 'Transport',
       'status': 'ouverte',
       'location': 'Adjamé, Abidjan',
@@ -96,7 +107,8 @@ class _JobsTabState extends State<JobsTab> {
     {
       'id': '6',
       'title': 'Cours particuliers de français',
-      'description': 'Recherche professeur de français pour cours particuliers niveau lycée, 3 fois par semaine.',
+      'description':
+          'Recherche professeur de français pour cours particuliers niveau lycée, 3 fois par semaine.',
       'category': 'Autre',
       'status': 'fermée',
       'location': 'Cocody, Abidjan',
@@ -110,17 +122,26 @@ class _JobsTabState extends State<JobsTab> {
 
   List<Map<String, dynamic>> get _filteredAnnouncements {
     return _mockAnnouncements.where((announcement) {
-      final categoryMatch = _selectedCategory == 'Toutes' || 
-          announcement['category'] == _selectedCategory;
-      final statusMatch = _selectedStatus == 'Tous' || 
-          announcement['status'] == _selectedStatus;
-      final searchMatch = _search.isEmpty ||
-          announcement['title'].toLowerCase().contains(_search.toLowerCase()) ||
-          announcement['description'].toLowerCase().contains(_search.toLowerCase()) ||
-          announcement['location'].toLowerCase().contains(_search.toLowerCase());
-      
-      return categoryMatch && statusMatch && searchMatch;
-    }).toList()
+        final categoryMatch =
+            _selectedCategory == 'Toutes' ||
+            announcement['category'] == _selectedCategory;
+        final statusMatch =
+            _selectedStatus == 'Tous' ||
+            announcement['status'] == _selectedStatus;
+        final searchMatch =
+            _search.isEmpty ||
+            announcement['title'].toLowerCase().contains(
+              _search.toLowerCase(),
+            ) ||
+            announcement['description'].toLowerCase().contains(
+              _search.toLowerCase(),
+            ) ||
+            announcement['location'].toLowerCase().contains(
+              _search.toLowerCase(),
+            );
+
+        return categoryMatch && statusMatch && searchMatch;
+      }).toList()
       ..sort((a, b) {
         if (_selectedDateSort == 'Plus récentes') {
           return b['createdAt'].compareTo(a['createdAt']);
@@ -133,7 +154,7 @@ class _JobsTabState extends State<JobsTab> {
   @override
   Widget build(BuildContext context) {
     final filteredAnnouncements = _filteredAnnouncements;
-    
+
     return Column(
       children: [
         // Barre de recherche moderne
@@ -154,19 +175,20 @@ class _JobsTabState extends State<JobsTab> {
           selectedDateSort: _selectedDateSort,
           onDateSortChanged: (sort) => setState(() => _selectedDateSort = sort),
         ),
-        // Liste des annonces
+        SizedBox(height:16),
         Expanded(
-          child: filteredAnnouncements.isEmpty
-              ? _buildEmptyState()
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredAnnouncements.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final announcement = filteredAnnouncements[index];
-                    return _buildAnnouncementCard(announcement);
-                  },
-                ),
+          child:
+              filteredAnnouncements.isEmpty
+                  ? _buildEmptyState()
+                  : ListView.separated(
+                    // padding: const EdgeInsets.all(16),
+                    itemCount: filteredAnnouncements.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final announcement = filteredAnnouncements[index];
+                      return _buildAnnouncementCard(announcement);
+                    },
+                  ),
         ),
       ],
     );
@@ -177,11 +199,7 @@ class _JobsTabState extends State<JobsTab> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Iconsax.briefcase,
-            size: 64,
-            color: Colors.grey[400],
-          ),
+          Icon(Iconsax.briefcase, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'Aucune annonce trouvée',
@@ -194,9 +212,9 @@ class _JobsTabState extends State<JobsTab> {
           Text(
             'Essayez de modifier vos filtres\nou créez une nouvelle annonce',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[500],
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -222,13 +240,14 @@ class _JobsTabState extends State<JobsTab> {
     final DateTime createdAt = announcement['createdAt'];
     final String timeAgo = _getTimeAgo(createdAt);
 
-    return Card(
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey[200]!),
+    return Container(
+      // elevation: 0,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey[200]!),
+        // borderRadius: BorderRadius.circular(16),
       ),
+
       child: InkWell(
         onTap: () {
           // Créer un objet Announcement fictif pour la navigation
@@ -256,7 +275,9 @@ class _JobsTabState extends State<JobsTab> {
                 children: [
                   CircleAvatar(
                     radius: 20,
-                    backgroundImage: NetworkImage(announcement['creatorAvatar']),
+                    backgroundImage: NetworkImage(
+                      announcement['creatorAvatar'],
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -282,11 +303,15 @@ class _JobsTabState extends State<JobsTab> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: isOpen 
-                          ? const Color(0xFF10B981).withOpacity(0.1)
-                          : const Color(0xFFEF4444).withOpacity(0.1),
+                      color:
+                          isOpen
+                              ? const Color(0xFF10B981).withOpacity(0.1)
+                              : const Color(0xFFEF4444).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
@@ -295,9 +320,10 @@ class _JobsTabState extends State<JobsTab> {
                         Icon(
                           isOpen ? Iconsax.clock : Iconsax.lock_1,
                           size: 12,
-                          color: isOpen 
-                              ? const Color(0xFF10B981)
-                              : const Color(0xFFEF4444),
+                          color:
+                              isOpen
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFFEF4444),
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -305,9 +331,10 @@ class _JobsTabState extends State<JobsTab> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: isOpen 
-                                ? const Color(0xFF10B981)
-                                : const Color(0xFFEF4444),
+                            color:
+                                isOpen
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFFEF4444),
                           ),
                         ),
                       ],
@@ -316,7 +343,7 @@ class _JobsTabState extends State<JobsTab> {
                 ],
               ),
               const SizedBox(height: 12),
-              
+
               // Titre
               Text(
                 announcement['title'],
@@ -329,7 +356,7 @@ class _JobsTabState extends State<JobsTab> {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 8),
-              
+
               // Description
               Text(
                 announcement['description'],
@@ -342,13 +369,16 @@ class _JobsTabState extends State<JobsTab> {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 12),
-              
+
               // Informations supplémentaires
               Row(
                 children: [
                   // Catégorie
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF2563EB).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
@@ -363,39 +393,28 @@ class _JobsTabState extends State<JobsTab> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  
+
                   // Localisation
-                  Icon(
-                    Iconsax.location,
-                    size: 14,
-                    color: Colors.grey[500],
-                  ),
+                  Icon(Iconsax.location, size: 14, color: Colors.grey[500]),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       announcement['location'],
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              
+
               // Budget et propositions
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      Icon(
-                        Iconsax.wallet_3,
-                        size: 16,
-                        color: Colors.grey[600],
-                      ),
+                      Icon(Iconsax.wallet_3, size: 16, color: Colors.grey[600]),
                       const SizedBox(width: 4),
                       Text(
                         '${announcement['budget']} FCFA',
@@ -409,11 +428,7 @@ class _JobsTabState extends State<JobsTab> {
                   ),
                   Row(
                     children: [
-                      Icon(
-                        Iconsax.people,
-                        size: 16,
-                        color: Colors.grey[600],
-                      ),
+                      Icon(Iconsax.people, size: 16, color: Colors.grey[600]),
                       const SizedBox(width: 4),
                       Text(
                         '${announcement['proposals']} propositions',
