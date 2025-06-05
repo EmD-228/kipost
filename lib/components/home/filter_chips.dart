@@ -48,70 +48,22 @@ class HorizontalFilters extends StatelessWidget {
   final List<String> categories;
   final String selectedCategory;
   final Function(String) onCategoryChanged;
-  
-  final List<String> statusList;
-  final String selectedStatus;
-  final Function(String) onStatusChanged;
-  
-  final List<String> dateSortList;
-  final String selectedDateSort;
-  final Function(String) onDateSortChanged;
 
   const HorizontalFilters({
     super.key,
     required this.categories,
     required this.selectedCategory,
     required this.onCategoryChanged,
-    required this.statusList,
-    required this.selectedStatus,
-    required this.onStatusChanged,
-    required this.dateSortList,
-    required this.selectedDateSort,
-    required this.onDateSortChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Section Catégories
-        _buildFilterSection(
-          title: "Catégories",
-          items: categories,
-          selectedItem: selectedCategory,
-          onItemSelected: onCategoryChanged,
-          color: Colors.deepPurple,
-        ),
-        
-        const SizedBox(height: 12),
-        
-        // Section Statut et Tri
-        Row(
-          children: [
-            Expanded(
-              child: _buildFilterSection(
-                title: "Statut",
-                items: statusList,
-                selectedItem: selectedStatus,
-                onItemSelected: onStatusChanged,
-                color: Colors.green,
-                isCompact: true,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildFilterSection(
-                title: "Tri",
-                items: dateSortList,
-                selectedItem: selectedDateSort,
-                onItemSelected: onDateSortChanged,
-                color: Colors.orange,
-                isCompact: true,
-              ),
-            ),
-          ],
-        ),
-      ],
+    return _buildFilterSection(
+      title: "Catégories",
+      items: categories,
+      selectedItem: selectedCategory,
+      onItemSelected: onCategoryChanged,
+      color: Colors.deepPurple,
     );
   }
 
@@ -125,43 +77,28 @@ class HorizontalFilters extends StatelessWidget {
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade600,
-              letterSpacing: 0.5,
+      child: isCompact
+          ? Wrap(
+              spacing: 8,
+              children: items.map((item) => FilterChipWidget(
+                label: item,
+                isSelected: selectedItem == item,
+                onTap: () => onItemSelected(item),
+                color: color,
+              )).toList(),
+            )
+          : SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: items.map((item) => FilterChipWidget(
+                  label: item,
+                  isSelected: selectedItem == item,
+                  onTap: () => onItemSelected(item),
+                  color: color,
+                )).toList(),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          isCompact
-              ? Wrap(
-                  spacing: 8,
-                  children: items.map((item) => FilterChipWidget(
-                    label: item,
-                    isSelected: selectedItem == item,
-                    onTap: () => onItemSelected(item),
-                    color: color,
-                  )).toList(),
-                )
-              : SizedBox(
-                  height: 40,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: items.map((item) => FilterChipWidget(
-                      label: item,
-                      isSelected: selectedItem == item,
-                      onTap: () => onItemSelected(item),
-                      color: color,
-                    )).toList(),
-                  ),
-                ),
-        ],
-      ),
     );
   }
 }

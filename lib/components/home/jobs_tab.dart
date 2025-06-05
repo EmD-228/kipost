@@ -24,12 +24,6 @@ class _JobsTabState extends State<JobsTab> {
   ];
   String _selectedCategory = 'Toutes';
 
-  final List<String> _statusList = ['Tous', 'ouverte', 'fermée'];
-  String _selectedStatus = 'Tous';
-
-  final List<String> _dateSortList = ['Plus récentes', 'Plus anciennes'];
-  String _selectedDateSort = 'Plus récentes';
-
   String _search = '';
 
   // Données fictives pour le développement
@@ -64,20 +58,6 @@ class _JobsTabState extends State<JobsTab> {
     },
     {
       'id': '3',
-      'title': 'Fabrication de meubles sur mesure',
-      'description':
-          'Besoin d\'un menuisier pour fabriquer des meubles sur mesure pour ma nouvelle maison.',
-      'category': 'Menuiserie',
-      'status': 'fermée',
-      'location': 'Marcory, Abidjan',
-      'budget': '80000',
-      'createdAt': DateTime.now().subtract(const Duration(days: 3)),
-      'creatorName': 'Kwame Osei',
-      'creatorAvatar': 'https://avatar.iran.liara.run/public/15',
-      'proposals': 5,
-    },
-    {
-      'id': '4',
       'title': 'Service de ménage hebdomadaire',
       'description':
           'Recherche aide ménagère fiable pour entretien hebdomadaire d\'un appartement 3 pièces.',
@@ -91,7 +71,7 @@ class _JobsTabState extends State<JobsTab> {
       'proposals': 12,
     },
     {
-      'id': '5',
+      'id': '4',
       'title': 'Transport de déménagement',
       'description':
           'Besoin d\'un service de transport pour déménagement complet d\'un appartement 2 pièces.',
@@ -104,20 +84,6 @@ class _JobsTabState extends State<JobsTab> {
       'creatorAvatar': 'https://avatar.iran.liara.run/public/18',
       'proposals': 4,
     },
-    {
-      'id': '6',
-      'title': 'Cours particuliers de français',
-      'description':
-          'Recherche professeur de français pour cours particuliers niveau lycée, 3 fois par semaine.',
-      'category': 'Autre',
-      'status': 'fermée',
-      'location': 'Cocody, Abidjan',
-      'budget': '30000',
-      'createdAt': DateTime.now().subtract(const Duration(days: 5)),
-      'creatorName': 'Efua Boateng',
-      'creatorAvatar': 'https://avatar.iran.liara.run/public/28',
-      'proposals': 8,
-    },
   ];
 
   List<Map<String, dynamic>> get _filteredAnnouncements {
@@ -125,9 +91,6 @@ class _JobsTabState extends State<JobsTab> {
         final categoryMatch =
             _selectedCategory == 'Toutes' ||
             announcement['category'] == _selectedCategory;
-        final statusMatch =
-            _selectedStatus == 'Tous' ||
-            announcement['status'] == _selectedStatus;
         final searchMatch =
             _search.isEmpty ||
             announcement['title'].toLowerCase().contains(
@@ -140,59 +103,67 @@ class _JobsTabState extends State<JobsTab> {
               _search.toLowerCase(),
             );
 
-        return categoryMatch && statusMatch && searchMatch;
-      }).toList()
-      ..sort((a, b) {
-        if (_selectedDateSort == 'Plus récentes') {
-          return b['createdAt'].compareTo(a['createdAt']);
-        } else {
-          return a['createdAt'].compareTo(b['createdAt']);
-        }
-      });
+        return categoryMatch && searchMatch;
+      }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final filteredAnnouncements = _filteredAnnouncements;
 
-    return Column(
-      children: [
-        // Barre de recherche moderne
-        custom.SearchBar(
-          search: _search,
-          onChanged: (val) => setState(() => _search = val),
-          onClear: () => setState(() => _search = ''),
+    return CustomScrollView(
+      slivers: [
+        // SliverAppBar avec barre de recherche et filtres dans flexibleSpace
+        SliverAppBar(
+          expandedHeight: 145.0,
+          floating: true,
+          snap: true,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          flexibleSpace: FlexibleSpaceBar(
+            background: Container(
+              color: Colors.white,
+              // padding: const EdgeInsets.fromLTRB(16,0, 16, 16),
+              child: Column(
+                children: [
+                  // Barre de recherche moderne
+                  custom.SearchBar(
+                    search: _search,
+                    onChanged: (val) => setState(() => _search = val),
+                    onClear: () => setState(() => _search = ''),
+                  ),
+                  
+                   const SizedBox(height: 6),
+                  
+                  // Filtres horizontaux modernisés
+                  HorizontalFilters(
+                    
+                    categories: _categories,
+                    selectedCategory: _selectedCategory,
+                    onCategoryChanged: (cat) => setState(() => _selectedCategory = cat),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
         
-        // Filtres horizontaux modernisés
-        HorizontalFilters(
-          categories: _categories,
-          selectedCategory: _selectedCategory,
-          onCategoryChanged: (cat) => setState(() => _selectedCategory = cat),
-          statusList: _statusList,
-          selectedStatus: _selectedStatus,
-          onStatusChanged: (status) => setState(() => _selectedStatus = status),
-          dateSortList: _dateSortList,
-          selectedDateSort: _selectedDateSort,
-          onDateSortChanged: (sort) => setState(() => _selectedDateSort = sort),
-        ),
-        
-        const SizedBox(height: 16),
-        
-        // Liste des annonces
-        Expanded(
-          child: filteredAnnouncements.isEmpty
-              ? _buildEmptyState()
-              : ListView.separated(
-                  padding: EdgeInsets.zero,
+        // Liste des annonces avec effet sliver
+        filteredAnnouncements.isEmpty
+            ? SliverFillRemaining(
+                child: _buildEmptyState(),
+              )
+            : SliverPadding(
+                padding: EdgeInsets.zero,
+                sliver: SliverList.separated(
                   itemCount: filteredAnnouncements.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final announcement = filteredAnnouncements[index];
                     return _buildAnnouncementCard(announcement);
                   },
+                  separatorBuilder: (context, index) => const SizedBox(height: 12),
                 ),
-        ),
+              ),
       ],
     );
   }
