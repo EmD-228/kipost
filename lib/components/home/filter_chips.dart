@@ -4,39 +4,41 @@ class FilterChipWidget extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+  final Color? color;
 
   const FilterChipWidget({
     super.key,
     required this.label,
     required this.isSelected,
     required this.onTap,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: FilterChip(
-        label: Text(label),
-        selected: isSelected,
-        onSelected: (_) => onTap(),
-        backgroundColor: Colors.white,
-        selectedColor: Colors.deepPurple[50],
-        checkmarkColor: Colors.deepPurple,
-        labelStyle: TextStyle(
-          color: isSelected ? Colors.deepPurple : Colors.grey.shade700,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        ),
-        shape: RoundedRectangleBorder(
+    final chipColor = color ?? Colors.deepPurple;
+    
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? chipColor.withOpacity(0.1) : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: isSelected 
-                ? Colors.deepPurple.withOpacity(0.3)
-                : Colors.grey.shade300,
+          border: Border.all(
+            color: isSelected ? chipColor : Colors.grey.shade300,
+            width: 1,
           ),
         ),
-        elevation: isSelected ? 2 : 0,
-        pressElevation: 4,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? chipColor : Colors.grey.shade700,
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
       ),
     );
   }
@@ -70,30 +72,94 @@ class HorizontalFilters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Section Catégories
+        _buildFilterSection(
+          title: "Catégories",
+          items: categories,
+          selectedItem: selectedCategory,
+          onItemSelected: onCategoryChanged,
+          color: Colors.deepPurple,
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Section Statut et Tri
+        Row(
+          children: [
+            Expanded(
+              child: _buildFilterSection(
+                title: "Statut",
+                items: statusList,
+                selectedItem: selectedStatus,
+                onItemSelected: onStatusChanged,
+                color: Colors.green,
+                isCompact: true,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildFilterSection(
+                title: "Tri",
+                items: dateSortList,
+                selectedItem: selectedDateSort,
+                onItemSelected: onDateSortChanged,
+                color: Colors.orange,
+                isCompact: true,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterSection({
+    required String title,
+    required List<String> items,
+    required String selectedItem,
+    required Function(String) onItemSelected,
+    required Color color,
+    bool isCompact = false,
+  }) {
     return Container(
-      height: 60,
-      margin: const EdgeInsets.only(top: 16),
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ...categories.map((cat) => FilterChipWidget(
-            label: cat,
-            isSelected: selectedCategory == cat,
-            onTap: () => onCategoryChanged(cat),
-          )),
-          const SizedBox(width: 12),
-          ...statusList.map((status) => FilterChipWidget(
-            label: status,
-            isSelected: selectedStatus == status,
-            onTap: () => onStatusChanged(status),
-          )),
-          const SizedBox(width: 12),
-          ...dateSortList.map((sort) => FilterChipWidget(
-            label: sort,
-            isSelected: selectedDateSort == sort,
-            onTap: () => onDateSortChanged(sort),
-          )),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade600,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          isCompact
+              ? Wrap(
+                  spacing: 8,
+                  children: items.map((item) => FilterChipWidget(
+                    label: item,
+                    isSelected: selectedItem == item,
+                    onTap: () => onItemSelected(item),
+                    color: color,
+                  )).toList(),
+                )
+              : SizedBox(
+                  height: 40,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: items.map((item) => FilterChipWidget(
+                      label: item,
+                      isSelected: selectedItem == item,
+                      onTap: () => onItemSelected(item),
+                      color: color,
+                    )).toList(),
+                  ),
+                ),
         ],
       ),
     );

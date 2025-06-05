@@ -163,6 +163,7 @@ class _JobsTabState extends State<JobsTab> {
           onChanged: (val) => setState(() => _search = val),
           onClear: () => setState(() => _search = ''),
         ),
+        
         // Filtres horizontaux modernisés
         HorizontalFilters(
           categories: _categories,
@@ -175,20 +176,22 @@ class _JobsTabState extends State<JobsTab> {
           selectedDateSort: _selectedDateSort,
           onDateSortChanged: (sort) => setState(() => _selectedDateSort = sort),
         ),
-        SizedBox(height:16),
+        
+        const SizedBox(height: 16),
+        
+        // Liste des annonces
         Expanded(
-          child:
-              filteredAnnouncements.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.separated(
-                    // padding: const EdgeInsets.all(16),
-                    itemCount: filteredAnnouncements.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final announcement = filteredAnnouncements[index];
-                      return _buildAnnouncementCard(announcement);
-                    },
-                  ),
+          child: filteredAnnouncements.isEmpty
+              ? _buildEmptyState()
+              : ListView.separated(
+                  padding: EdgeInsets.zero,
+                  itemCount: filteredAnnouncements.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final announcement = filteredAnnouncements[index];
+                    return _buildAnnouncementCard(announcement);
+                  },
+                ),
         ),
       ],
     );
@@ -241,13 +244,17 @@ class _JobsTabState extends State<JobsTab> {
     final String timeAgo = _getTimeAgo(createdAt);
 
     return Container(
-      // elevation: 0,
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(color: Colors.grey[200]!),
-        // borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-
       child: InkWell(
         onTap: () {
           // Créer un objet Announcement fictif pour la navigation
@@ -264,7 +271,6 @@ class _JobsTabState extends State<JobsTab> {
           );
           Get.toNamed('/announcement-detail', arguments: mockAnnouncement);
         },
-        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -274,10 +280,9 @@ class _JobsTabState extends State<JobsTab> {
               Row(
                 children: [
                   CircleAvatar(
-                    radius: 20,
-                    backgroundImage: NetworkImage(
-                      announcement['creatorAvatar'],
-                    ),
+                    radius: 18,
+                    backgroundImage: NetworkImage(announcement['creatorAvatar']),
+                    backgroundColor: Colors.grey.shade200,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -296,22 +301,18 @@ class _JobsTabState extends State<JobsTab> {
                           timeAgo,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: Colors.grey.shade500,
                           ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color:
-                          isOpen
-                              ? const Color(0xFF10B981).withOpacity(0.1)
-                              : const Color(0xFFEF4444).withOpacity(0.1),
+                      color: isOpen
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.red.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
@@ -320,10 +321,7 @@ class _JobsTabState extends State<JobsTab> {
                         Icon(
                           isOpen ? Iconsax.clock : Iconsax.lock_1,
                           size: 12,
-                          color:
-                              isOpen
-                                  ? const Color(0xFF10B981)
-                                  : const Color(0xFFEF4444),
+                          color: isOpen ? Colors.green : Colors.red,
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -331,10 +329,7 @@ class _JobsTabState extends State<JobsTab> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color:
-                                isOpen
-                                    ? const Color(0xFF10B981)
-                                    : const Color(0xFFEF4444),
+                            color: isOpen ? Colors.green : Colors.red,
                           ),
                         ),
                       ],
@@ -342,6 +337,7 @@ class _JobsTabState extends State<JobsTab> {
                   ),
                 ],
               ),
+              
               const SizedBox(height: 12),
 
               // Titre
@@ -355,6 +351,7 @@ class _JobsTabState extends State<JobsTab> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
+              
               const SizedBox(height: 8),
 
               // Description
@@ -362,12 +359,13 @@ class _JobsTabState extends State<JobsTab> {
                 announcement['description'],
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: Colors.grey.shade600,
                   height: 1.4,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
+              
               const SizedBox(height: 12),
 
               // Informations supplémentaires
@@ -375,12 +373,9 @@ class _JobsTabState extends State<JobsTab> {
                 children: [
                   // Catégorie
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB).withOpacity(0.1),
+                      color: Colors.deepPurple.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -388,24 +383,26 @@ class _JobsTabState extends State<JobsTab> {
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF2563EB),
+                        color: Colors.deepPurple,
                       ),
                     ),
                   ),
+                  
                   const SizedBox(width: 8),
 
                   // Localisation
-                  Icon(Iconsax.location, size: 14, color: Colors.grey[500]),
+                  Icon(Iconsax.location, size: 14, color: Colors.grey.shade500),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       announcement['location'],
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
+              
               const SizedBox(height: 12),
 
               // Budget et propositions
@@ -414,7 +411,7 @@ class _JobsTabState extends State<JobsTab> {
                 children: [
                   Row(
                     children: [
-                      Icon(Iconsax.wallet_3, size: 16, color: Colors.grey[600]),
+                      Icon(Iconsax.wallet_3, size: 16, color: Colors.grey.shade600),
                       const SizedBox(width: 4),
                       Text(
                         '${announcement['budget']} FCFA',
@@ -428,13 +425,13 @@ class _JobsTabState extends State<JobsTab> {
                   ),
                   Row(
                     children: [
-                      Icon(Iconsax.people, size: 16, color: Colors.grey[600]),
+                      Icon(Iconsax.people, size: 16, color: Colors.grey.shade600),
                       const SizedBox(width: 4),
                       Text(
                         '${announcement['proposals']} propositions',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: Colors.grey.shade600,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
