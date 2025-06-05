@@ -81,7 +81,7 @@ class ProposalCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                proposal.announcement!.category,
+                                proposal.announcement!.category.name,
                                 style: TextStyle(
                                   color: Colors.grey.shade500,
                                   fontSize: 12,

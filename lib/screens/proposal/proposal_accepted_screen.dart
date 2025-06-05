@@ -391,12 +391,16 @@ class _ProposalAcceptedScreenState extends State<ProposalAcceptedScreen>
                                   const SizedBox(height: 12),
                                   Row(
                                     children: [
-                                      Icon(Iconsax.category, size: 16, color: Colors.deepPurple),
+                                      Icon(
+                                        widget.proposal.announcement!.category.icon, 
+                                        size: 16, 
+                                        color: Colors.blue
+                                      ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        widget.proposal.announcement!.category,
+                                        widget.proposal.announcement!.category.name,
                                         style: TextStyle(
-                                          color: Colors.deepPurple,
+                                          color: Colors.blue,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),

@@ -256,9 +256,9 @@ class AnnouncementDetailScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _buildInfoRow(
                 icon: Iconsax.category,
-                color: Colors.orange,
+                color: Colors.blue,
                 label: 'Catégorie',
-                value: ann.category,
+                value: ann.category.name,
               ),
               const SizedBox(height: 12),
               _buildInfoRow(

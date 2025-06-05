@@ -14,7 +14,9 @@ class AnnouncementController extends GetxController {
     required String title,
     required String description,
     required String category,
+    required String urgencyLevel,
     required String location,
+    double? price,
   }) async {
     loading.value = true;
     try {
@@ -23,7 +25,9 @@ class AnnouncementController extends GetxController {
         'title': title,
         'description': description,
         'category': category,
+        'urgencyLevel': urgencyLevel,
         'location': location,
+        'price': price,
         'createdAt': FieldValue.serverTimestamp(),
         'status': 'ouverte',
         'creatorId': user?.uid,

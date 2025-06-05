@@ -597,12 +597,12 @@ class _ProposalsTabState extends State<ProposalsTab> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Iconsax.category, size: 12, color: Colors.grey.shade600),
+                        Icon(proposal.announcement!.category.icon, size: 12, color: Colors.blue),
                         const SizedBox(width: 4),
                         Text(
-                          proposal.announcement!.category,
+                          proposal.announcement!.category.name,
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: Colors.blue,
                             fontSize: 12,
                           ),
                         ),

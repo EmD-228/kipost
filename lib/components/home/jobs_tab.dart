@@ -26,80 +26,76 @@ class _JobsTabState extends State<JobsTab> {
 
   String _search = '';
 
-  // Données fictives pour le développement
-  final List<Map<String, dynamic>> _mockAnnouncements = [
-    {
-      'id': '1',
-      'title': 'Réparation de plomberie urgente',
-      'description':
-          'Recherche plombier qualifié pour réparer une fuite d\'eau dans la cuisine. Intervention rapide souhaitée.',
-      'category': 'Plomberie',
-      'status': 'ouverte',
-      'location': 'Cocody, Abidjan',
-      'budget': '25000',
-      'createdAt': DateTime.now().subtract(const Duration(hours: 2)),
-      'creatorName': 'Kofi Asante',
-      'creatorAvatar': 'https://avatar.iran.liara.run/public/42',
-      'proposals': 3,
-    },
-    {
-      'id': '2',
-      'title': 'Installation électrique complète',
-      'description':
-          'Installation électrique pour un nouveau bureau. Recherche électricien certifié avec expérience.',
-      'category': 'Électricité',
-      'status': 'ouverte',
-      'location': 'Plateau, Abidjan',
-      'budget': '150000',
-      'createdAt': DateTime.now().subtract(const Duration(days: 1)),
-      'creatorName': 'Ama Serwaa',
-      'creatorAvatar': 'https://avatar.iran.liara.run/public/25',
-      'proposals': 7,
-    },
-    {
-      'id': '3',
-      'title': 'Service de ménage hebdomadaire',
-      'description':
-          'Recherche aide ménagère fiable pour entretien hebdomadaire d\'un appartement 3 pièces.',
-      'category': 'Aide ménagère',
-      'status': 'ouverte',
-      'location': 'Yopougon, Abidjan',
-      'budget': '40000',
-      'createdAt': DateTime.now().subtract(const Duration(hours: 6)),
-      'creatorName': 'Akosua Gyasi',
-      'creatorAvatar': 'https://avatar.iran.liara.run/public/33',
-      'proposals': 12,
-    },
-    {
-      'id': '4',
-      'title': 'Transport de déménagement',
-      'description':
-          'Besoin d\'un service de transport pour déménagement complet d\'un appartement 2 pièces.',
-      'category': 'Transport',
-      'status': 'ouverte',
-      'location': 'Adjamé, Abidjan',
-      'budget': '60000',
-      'createdAt': DateTime.now().subtract(const Duration(days: 2)),
-      'creatorName': 'Yaw Mensah',
-      'creatorAvatar': 'https://avatar.iran.liara.run/public/18',
-      'proposals': 4,
-    },
+  // Données fictives pour le développement utilisant le nouveau modèle
+  final List<Announcement> _mockAnnouncements = [
+    Announcement.createMockAnnouncement(
+      id: '1',
+      title: 'Réparation de plomberie urgente',
+      description: 'Recherche plombier qualifié pour réparer une fuite d\'eau dans la cuisine. Intervention rapide souhaitée.',
+      categoryId: 'plomberie',
+      status: 'open',
+      location: 'Cocody, Abidjan',
+      budget: '25000',
+      creatorName: 'Kofi Asante',
+      creatorAvatar: 'https://avatar.iran.liara.run/public/42',
+      proposalCount: 3,
+      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+    ),
+    Announcement.createMockAnnouncement(
+      id: '2',
+      title: 'Installation électrique complète',
+      description: 'Installation électrique pour un nouveau bureau. Recherche électricien certifié avec expérience.',
+      categoryId: 'electricite',
+      status: 'open',
+      location: 'Plateau, Abidjan',
+      budget: '150000',
+      creatorName: 'Ama Serwaa',
+      creatorAvatar: 'https://avatar.iran.liara.run/public/25',
+      proposalCount: 7,
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+    ),
+    Announcement.createMockAnnouncement(
+      id: '3',
+      title: 'Service de ménage hebdomadaire',
+      description: 'Recherche aide ménagère fiable pour entretien hebdomadaire d\'un appartement 3 pièces.',
+      categoryId: 'aide_menagere',
+      status: 'open',
+      location: 'Yopougon, Abidjan',
+      budget: '40000',
+      creatorName: 'Akosua Gyasi',
+      creatorAvatar: 'https://avatar.iran.liara.run/public/33',
+      proposalCount: 12,
+      createdAt: DateTime.now().subtract(const Duration(hours: 6)),
+    ),
+    Announcement.createMockAnnouncement(
+      id: '4',
+      title: 'Transport de déménagement',
+      description: 'Besoin d\'un service de transport pour déménagement complet d\'un appartement 2 pièces.',
+      categoryId: 'transport',
+      status: 'open',
+      location: 'Adjamé, Abidjan',
+      budget: '60000',
+      creatorName: 'Yaw Mensah',
+      creatorAvatar: 'https://avatar.iran.liara.run/public/18',
+      proposalCount: 4,
+      createdAt: DateTime.now().subtract(const Duration(days: 2)),
+    ),
   ];
 
-  List<Map<String, dynamic>> get _filteredAnnouncements {
+  List<Announcement> get _filteredAnnouncements {
     return _mockAnnouncements.where((announcement) {
         final categoryMatch =
             _selectedCategory == 'Toutes' ||
-            announcement['category'] == _selectedCategory;
+            announcement.category.name == _selectedCategory;
         final searchMatch =
             _search.isEmpty ||
-            announcement['title'].toLowerCase().contains(
+            announcement.title.toLowerCase().contains(
               _search.toLowerCase(),
             ) ||
-            announcement['description'].toLowerCase().contains(
+            announcement.description.toLowerCase().contains(
               _search.toLowerCase(),
             ) ||
-            announcement['location'].toLowerCase().contains(
+            announcement.location.toLowerCase().contains(
               _search.toLowerCase(),
             );
 
@@ -209,9 +205,9 @@ class _JobsTabState extends State<JobsTab> {
     );
   }
 
-  Widget _buildAnnouncementCard(Map<String, dynamic> announcement) {
-    final bool isOpen = announcement['status'] == 'ouverte';
-    final DateTime createdAt = announcement['createdAt'];
+  Widget _buildAnnouncementCard(Announcement announcement) {
+    final bool isOpen = announcement.isOpen;
+    final DateTime createdAt = announcement.createdAt;
     final String timeAgo = _getTimeAgo(createdAt);
 
     return Container(
@@ -228,19 +224,7 @@ class _JobsTabState extends State<JobsTab> {
       ),
       child: InkWell(
         onTap: () {
-          // Créer un objet Announcement fictif pour la navigation
-          final mockAnnouncement = Announcement(
-            id: announcement['id'],
-            title: announcement['title'],
-            description: announcement['description'],
-            category: announcement['category'],
-            status: announcement['status'],
-            location: announcement['location'],
-            createdAt: announcement['createdAt'],
-            creatorId: 'mock_creator_${announcement['id']}',
-            creatorEmail: 'mock@email.com',
-          );
-          Get.toNamed('/announcement-detail', arguments: mockAnnouncement);
+          Get.toNamed('/announcement-detail', arguments: announcement);
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -252,7 +236,7 @@ class _JobsTabState extends State<JobsTab> {
                 children: [
                   CircleAvatar(
                     radius: 18,
-                    backgroundImage: NetworkImage(announcement['creatorAvatar']),
+                    backgroundImage: NetworkImage(announcement.creator?.avatar ?? 'https://avatar.iran.liara.run/public/33'),
                     backgroundColor: Colors.grey.shade200,
                   ),
                   const SizedBox(width: 12),
@@ -261,7 +245,7 @@ class _JobsTabState extends State<JobsTab> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          announcement['creatorName'],
+                          announcement.creator?.name ?? 'Utilisateur anonyme',
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
@@ -313,7 +297,7 @@ class _JobsTabState extends State<JobsTab> {
 
               // Titre
               Text(
-                announcement['title'],
+                announcement.title,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -327,7 +311,7 @@ class _JobsTabState extends State<JobsTab> {
 
               // Description
               Text(
-                announcement['description'],
+                announcement.description,
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey.shade600,
@@ -342,20 +326,31 @@ class _JobsTabState extends State<JobsTab> {
               // Informations supplémentaires
               Row(
                 children: [
-                  // Catégorie
+                  // Catégorie avec icône
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.deepPurple.withOpacity(0.1),
+                      color: Colors.blue.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Text(
-                      announcement['category'],
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.deepPurple,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          announcement.category.icon,
+                          size: 10,
+                          color: Colors.blue,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          announcement.category.name,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   
@@ -366,7 +361,7 @@ class _JobsTabState extends State<JobsTab> {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      announcement['location'],
+                      announcement.location,
                       style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -385,7 +380,7 @@ class _JobsTabState extends State<JobsTab> {
                       Icon(Iconsax.wallet_3, size: 16, color: Colors.grey.shade600),
                       const SizedBox(width: 4),
                       Text(
-                        '${announcement['budget']} FCFA',
+                        '${announcement.budget} FCFA',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -399,7 +394,7 @@ class _JobsTabState extends State<JobsTab> {
                       Icon(Iconsax.people, size: 16, color: Colors.grey.shade600),
                       const SizedBox(width: 4),
                       Text(
-                        '${announcement['proposals']} propositions',
+                        '${announcement.proposalCount} propositions',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade600,
