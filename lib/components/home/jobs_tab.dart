@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:get/get.dart';
-import 'package:kipost/controllers/annoncement_controller.dart';
 import 'package:kipost/models/announcement.dart';
-import 'package:kipost/components/announcement_card.dart';
 import 'package:kipost/components/home/search_bar.dart' as custom;
 import 'package:kipost/components/home/filter_chips.dart';
-import 'package:kipost/components/home/empty_state.dart';
 
 class JobsTab extends StatefulWidget {
   const JobsTab({super.key});
@@ -16,8 +13,6 @@ class JobsTab extends StatefulWidget {
 }
 
 class _JobsTabState extends State<JobsTab> {
-  final AnnouncementController controller = Get.find();
-  
   final List<String> _categories = [
     'Toutes', 'Menuiserie', 'Plomberie', 'Électricité', 'Aide ménagère', 'Transport', 'Autre',
   ];
@@ -31,8 +26,114 @@ class _JobsTabState extends State<JobsTab> {
 
   String _search = '';
 
+  // Données fictives pour le développement
+  final List<Map<String, dynamic>> _mockAnnouncements = [
+    {
+      'id': '1',
+      'title': 'Réparation de plomberie urgente',
+      'description': 'Recherche plombier qualifié pour réparer une fuite d\'eau dans la cuisine. Intervention rapide souhaitée.',
+      'category': 'Plomberie',
+      'status': 'ouverte',
+      'location': 'Cocody, Abidjan',
+      'budget': '25000',
+      'createdAt': DateTime.now().subtract(const Duration(hours: 2)),
+      'creatorName': 'Kofi Asante',
+      'creatorAvatar': 'https://avatar.iran.liara.run/public/42',
+      'proposals': 3,
+    },
+    {
+      'id': '2',
+      'title': 'Installation électrique complète',
+      'description': 'Installation électrique pour un nouveau bureau. Recherche électricien certifié avec expérience.',
+      'category': 'Électricité',
+      'status': 'ouverte',
+      'location': 'Plateau, Abidjan',
+      'budget': '150000',
+      'createdAt': DateTime.now().subtract(const Duration(days: 1)),
+      'creatorName': 'Ama Serwaa',
+      'creatorAvatar': 'https://avatar.iran.liara.run/public/25',
+      'proposals': 7,
+    },
+    {
+      'id': '3',
+      'title': 'Fabrication de meubles sur mesure',
+      'description': 'Besoin d\'un menuisier pour fabriquer des meubles sur mesure pour ma nouvelle maison.',
+      'category': 'Menuiserie',
+      'status': 'fermée',
+      'location': 'Marcory, Abidjan',
+      'budget': '80000',
+      'createdAt': DateTime.now().subtract(const Duration(days: 3)),
+      'creatorName': 'Kwame Osei',
+      'creatorAvatar': 'https://avatar.iran.liara.run/public/15',
+      'proposals': 5,
+    },
+    {
+      'id': '4',
+      'title': 'Service de ménage hebdomadaire',
+      'description': 'Recherche aide ménagère fiable pour entretien hebdomadaire d\'un appartement 3 pièces.',
+      'category': 'Aide ménagère',
+      'status': 'ouverte',
+      'location': 'Yopougon, Abidjan',
+      'budget': '40000',
+      'createdAt': DateTime.now().subtract(const Duration(hours: 6)),
+      'creatorName': 'Akosua Gyasi',
+      'creatorAvatar': 'https://avatar.iran.liara.run/public/33',
+      'proposals': 12,
+    },
+    {
+      'id': '5',
+      'title': 'Transport de déménagement',
+      'description': 'Besoin d\'un service de transport pour déménagement complet d\'un appartement 2 pièces.',
+      'category': 'Transport',
+      'status': 'ouverte',
+      'location': 'Adjamé, Abidjan',
+      'budget': '60000',
+      'createdAt': DateTime.now().subtract(const Duration(days: 2)),
+      'creatorName': 'Yaw Mensah',
+      'creatorAvatar': 'https://avatar.iran.liara.run/public/18',
+      'proposals': 4,
+    },
+    {
+      'id': '6',
+      'title': 'Cours particuliers de français',
+      'description': 'Recherche professeur de français pour cours particuliers niveau lycée, 3 fois par semaine.',
+      'category': 'Autre',
+      'status': 'fermée',
+      'location': 'Cocody, Abidjan',
+      'budget': '30000',
+      'createdAt': DateTime.now().subtract(const Duration(days: 5)),
+      'creatorName': 'Efua Boateng',
+      'creatorAvatar': 'https://avatar.iran.liara.run/public/28',
+      'proposals': 8,
+    },
+  ];
+
+  List<Map<String, dynamic>> get _filteredAnnouncements {
+    return _mockAnnouncements.where((announcement) {
+      final categoryMatch = _selectedCategory == 'Toutes' || 
+          announcement['category'] == _selectedCategory;
+      final statusMatch = _selectedStatus == 'Tous' || 
+          announcement['status'] == _selectedStatus;
+      final searchMatch = _search.isEmpty ||
+          announcement['title'].toLowerCase().contains(_search.toLowerCase()) ||
+          announcement['description'].toLowerCase().contains(_search.toLowerCase()) ||
+          announcement['location'].toLowerCase().contains(_search.toLowerCase());
+      
+      return categoryMatch && statusMatch && searchMatch;
+    }).toList()
+      ..sort((a, b) {
+        if (_selectedDateSort == 'Plus récentes') {
+          return b['createdAt'].compareTo(a['createdAt']);
+        } else {
+          return a['createdAt'].compareTo(b['createdAt']);
+        }
+      });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filteredAnnouncements = _filteredAnnouncements;
+    
     return Column(
       children: [
         // Barre de recherche moderne
@@ -55,70 +156,296 @@ class _JobsTabState extends State<JobsTab> {
         ),
         // Liste des annonces
         Expanded(
-          child: StreamBuilder(
-            stream: controller.getAnnouncementsStream(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return EmptyState(
-                  icon: Iconsax.briefcase,
-                  title: 'Aucune annonce disponible',
-                  description: 'Soyez le premier à créer une annonce\net trouvez le service parfait !',
-                  buttonText: 'Créer une annonce',
-                  onPressed: () => Get.toNamed('/create-announcement'),
-                );
-              }
-              
-              // Filtrage par catégorie, statut, recherche
-              var docs = snapshot.data!.docs.where((doc) {
-                final catOk = _selectedCategory == 'Toutes' || doc['category'] == _selectedCategory;
-                final statusOk = _selectedStatus == 'Tous' || doc['status'] == _selectedStatus;
-                final searchOk = _search.isEmpty ||
-                    (doc['title'] ?? '').toLowerCase().contains(_search.toLowerCase()) ||
-                    (doc['description'] ?? '').toLowerCase().contains(_search.toLowerCase());
-                return catOk && statusOk && searchOk;
-              }).toList();
-
-              // Conversion en objets Announcement
-              final announcements = docs
-                  .map((doc) => Announcement.fromMap(doc.data(), doc.id))
-                  .toList();
-
-              // Tri par date
-              announcements.sort((a, b) {
-                if (_selectedDateSort == 'Plus récentes') {
-                  return b.createdAt.compareTo(a.createdAt);
-                } else {
-                  return a.createdAt.compareTo(b.createdAt);
-                }
-              });
-
-              if (announcements.isEmpty) {
-                return const Center(
-                  child: Text('Aucune annonce pour ce filtre.'),
-                );
-              }
-
-              return ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: announcements.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, i) {
-                  final ann = announcements[i];
-                  return AnnouncementCard(
-                    announcement: ann,
-                    onTap: () {
-                      Get.toNamed('/announcement-detail', arguments: ann);
-                    },
-                  );
-                },
-              );
-            },
-          ),
+          child: filteredAnnouncements.isEmpty
+              ? _buildEmptyState()
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filteredAnnouncements.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final announcement = filteredAnnouncements[index];
+                    return _buildAnnouncementCard(announcement);
+                  },
+                ),
         ),
       ],
     );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Iconsax.briefcase,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Aucune annonce trouvée',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Essayez de modifier vos filtres\nou créez une nouvelle annonce',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.grey[500],
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => Get.toNamed('/create-announcement'),
+            icon: const Icon(Iconsax.add),
+            label: const Text('Créer une annonce'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnnouncementCard(Map<String, dynamic> announcement) {
+    final bool isOpen = announcement['status'] == 'ouverte';
+    final DateTime createdAt = announcement['createdAt'];
+    final String timeAgo = _getTimeAgo(createdAt);
+
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey[200]!),
+      ),
+      child: InkWell(
+        onTap: () {
+          // Créer un objet Announcement fictif pour la navigation
+          final mockAnnouncement = Announcement(
+            id: announcement['id'],
+            title: announcement['title'],
+            description: announcement['description'],
+            category: announcement['category'],
+            status: announcement['status'],
+            location: announcement['location'],
+            createdAt: announcement['createdAt'],
+            creatorId: 'mock_creator_${announcement['id']}',
+            creatorEmail: 'mock@email.com',
+          );
+          Get.toNamed('/announcement-detail', arguments: mockAnnouncement);
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // En-tête avec avatar et statut
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundImage: NetworkImage(announcement['creatorAvatar']),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          announcement['creatorName'],
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: Color(0xFF1F2937),
+                          ),
+                        ),
+                        Text(
+                          timeAgo,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isOpen 
+                          ? const Color(0xFF10B981).withOpacity(0.1)
+                          : const Color(0xFFEF4444).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isOpen ? Iconsax.clock : Iconsax.lock_1,
+                          size: 12,
+                          color: isOpen 
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFFEF4444),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isOpen ? 'Ouverte' : 'Fermée',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isOpen 
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFFEF4444),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              
+              // Titre
+              Text(
+                announcement['title'],
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827),
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+              
+              // Description
+              Text(
+                announcement['description'],
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  height: 1.4,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 12),
+              
+              // Informations supplémentaires
+              Row(
+                children: [
+                  // Catégorie
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2563EB).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      announcement['category'],
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2563EB),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  
+                  // Localisation
+                  Icon(
+                    Iconsax.location,
+                    size: 14,
+                    color: Colors.grey[500],
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      announcement['location'],
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              
+              // Budget et propositions
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Iconsax.wallet_3,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${announcement['budget']} FCFA',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF059669),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Icon(
+                        Iconsax.people,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${announcement['proposals']} propositions',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return 'Il y a ${difference.inDays} jour${difference.inDays > 1 ? 's' : ''}';
+    } else if (difference.inHours > 0) {
+      return 'Il y a ${difference.inHours} heure${difference.inHours > 1 ? 's' : ''}';
+    } else if (difference.inMinutes > 0) {
+      return 'Il y a ${difference.inMinutes} minute${difference.inMinutes > 1 ? 's' : ''}';
+    } else {
+      return 'À l\'instant';
+    }
   }
 }

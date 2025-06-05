@@ -1,16 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:kipost/components/home/coming_soon_tab.dart';
+import 'package:kipost/components/calendar/calendar_header.dart';
+import 'package:kipost/components/calendar/calendar_widget.dart';
+import 'package:kipost/components/calendar/event_list.dart';
+import 'package:kipost/components/calendar/upcoming_events.dart';
 
-class ContractsTab extends StatelessWidget {
-  const ContractsTab({super.key});
+class CalendrierTab extends StatelessWidget {
+  const CalendrierTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const ComingSoonTab(
-      icon: Iconsax.document,
-      title: 'Contrats',
-      description: 'Gérez vos contrats et suivez\nle statut de vos projets en cours.',
+    return const SingleChildScrollView(
+      child: Column(
+        children: [
+          CalendarHeader(),
+          CalendarWidget(),
+          SizedBox(height: 8),
+          EventList(),
+          SizedBox(height: 8),
+          UpcomingEvents(),
+          SizedBox(height: 20),
+        ],
+      ),
     );
   }
 }

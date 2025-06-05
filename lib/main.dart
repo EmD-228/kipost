@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
 import 'package:kipost/app_route.dart';
 import 'package:kipost/controllers/annoncement_controller.dart';
 import 'package:kipost/controllers/proposal_controller.dart';
+import 'package:kipost/controllers/calendar_controller.dart';
 import 'package:kipost/firebase_options.dart';
 import 'package:kipost/screens/auth/auth_screen.dart';
 import 'controllers/auth_controller.dart';
@@ -25,12 +27,23 @@ class MyApp extends StatelessWidget {
     Get.put(AuthController());
     Get.put(AnnouncementController());
     Get.put(ProposalController());
+    Get.put(CalendarController());
 
 
 
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Kipost',
+      locale: const Locale('fr', 'FR'),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('fr', 'FR'),
+        Locale('en', 'US'),
+      ],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:kipost/components/kipost_button.dart';
 import 'package:kipost/controllers/annoncement_controller.dart';
 import 'package:kipost/controllers/auth_controller.dart';
 import 'package:kipost/controllers/proposal_controller.dart';
@@ -13,221 +12,627 @@ class AnnouncementDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Permet de recevoir soit un Announcement (depuis Jobs), soit un id (depuis Proposals)
-    final arg = Get.arguments;
+    final argument = Get.arguments;
+    
     return FutureBuilder<Announcement?>(
-      future: arg is Announcement ? Future.value(arg) : AnnouncementController().getAnnouncementById(arg as String),
+      future: argument is Announcement 
+        ? Future.value(argument)
+        : Get.find<AnnouncementController>().getAnnouncementById(argument.toString()),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Chargement...')),
+            body: const Center(child: CircularProgressIndicator()),
           );
         }
+        
+        if (!snapshot.hasData || snapshot.data == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Erreur')),
+            body: const Center(
+              child: Text('Annonce non trouvée'),
+            ),
+          );
+        }
+        
         final ann = snapshot.data!;
+        
         return Scaffold(
-          appBar: AppBar(
-            title: Text(ann.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-            centerTitle: true,
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: CircleAvatar(
-                    radius: 36,
-                    backgroundColor: Colors.deepPurple.shade50,
-                    child: Icon(
-                      Iconsax.document,
-                      size: 40,
-                      color: Colors.deepPurple,
+          body: CustomScrollView(
+            slivers: [
+              // AppBar moderne avec dégradé
+              SliverAppBar(
+                expandedHeight: 120,
+                floating: false,
+                pinned: true,
+                elevation: 0,
+                flexibleSpace: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.deepPurple,
+                        Colors.deepPurple.shade300,
+                        Colors.blue.shade400,
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Center(
-                  child: Chip(
-                    label: Text(
-                      ann.category,
-                      style: const TextStyle(
-                        color: Colors.deepPurple,
-                        fontWeight: FontWeight.bold,
+                  child: FlexibleSpaceBar(
+                    title: const Text(
+                      'Détails de l\'annonce',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
                       ),
                     ),
-                    backgroundColor: Colors.deepPurple.shade50,
-                    avatar: const Icon(
-                      Iconsax.category,
-                      color: Colors.deepPurple,
-                      size: 18,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  ann.title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const Icon(
-                      Iconsax.location,
-                      size: 18,
-                      color: Colors.deepPurple,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      ann.location,
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const Icon(Iconsax.user, size: 18, color: Colors.deepPurple),
-                    const SizedBox(width: 6),
-                    Text(
-                      ann.creatorEmail,
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(ann.description, style: Theme.of(context).textTheme.bodyLarge),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Chip(
-                      label: Text(
-                        ann.status,
-                        style: TextStyle(
-                          color:
-                              ann.status == 'ouverte' ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.bold,
+                    centerTitle: true,
+                    background: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.deepPurple.withOpacity(0.8),
+                            Colors.deepPurple.shade300.withOpacity(0.8),
+                            Colors.blue.shade400.withOpacity(0.8),
+                          ],
                         ),
                       ),
-                      backgroundColor:
-                          ann.status == 'ouverte'
-                              ? Colors.green.shade50
-                              : Colors.red.shade50,
-                      avatar: Icon(
-                        ann.status == 'ouverte'
-                            ? Iconsax.tick_circle
-                            : Iconsax.close_circle,
-                        color: ann.status == 'ouverte' ? Colors.green : Colors.red,
-                        size: 18,
+                      child: const Center(
+                        child: Hero(
+                          tag: 'announcement_hero',
+                          child: Icon(
+                            Iconsax.document_text,
+                            color: Colors.white,
+                            size: 40,
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Créée le : ${ann.createdAt.day}/${ann.createdAt.month}/${ann.createdAt.year}',
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 32),
-                
-                // Actions selon le rôle de l'utilisateur
-                ...(_buildUserActions(ann)),
-              ],
-            ),
+                leading: IconButton(
+                  icon: const Icon(Iconsax.arrow_left, color: Colors.white),
+                  onPressed: () => Get.back(),
+                ),
+              ),
+
+              // Contenu principal
+              SliverToBoxAdapter(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(0),
+                      topRight: Radius.circular(0),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // En-tête avec titre et statut
+                        _buildHeader(ann),
+                        const SizedBox(height: 24),
+                        
+                        // Informations principales
+                        _buildInfoSection(ann),
+                        const SizedBox(height: 24),
+                        
+                        // Description
+                        _buildDescriptionSection(ann),
+                        const SizedBox(height: 32),
+                        
+                        // Actions utilisateur
+                        ..._buildUserActions(ann),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  List<Widget> _buildUserActions(Announcement ann) {
-    final currentUserId = Get.find<AuthController>().firebaseUser.value?.uid;
-    final isCreator = currentUserId == ann.creatorId;
-
-    if (isCreator) {
-      // Actions pour le créateur
-      return [
-        // Bouton voir les propositions
-        if (ann.status == 'ouverte')
-          KipostButton(
-            label: 'Voir les propositions',
-            icon: Iconsax.document_text,
-            onPressed: () => Get.to(() => const ProposalsScreen(), arguments: ann),
+  Widget _buildHeader(Announcement ann) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Titre principal
+          Text(
+            ann.title,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF2D3748),
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Statut avec badge coloré
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: _getStatusColors(ann.status),
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _getStatusColors(ann.status)[0].withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _getStatusIcon(ann.status),
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      ann.status.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              Text(
+                'Publié le ${_formatDate(ann.createdAt)}',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoSection(Announcement ann) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Informations',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade800,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Grille d'informations
+          Column(
+            children: [
+              _buildInfoRow(
+                icon: Iconsax.location,
+                color: Colors.blue,
+                label: 'Lieu',
+                value: ann.location,
+              ),
+              const SizedBox(height: 12),
+              _buildInfoRow(
+                icon: Iconsax.category,
+                color: Colors.orange,
+                label: 'Catégorie',
+                value: ann.category,
+              ),
+              const SizedBox(height: 12),
+              _buildInfoRow(
+                icon: Iconsax.user,
+                color: Colors.purple,
+                label: 'Créateur',
+                value: ann.creatorEmail,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            size: 16,
+            color: color,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDescriptionSection(Announcement ann) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Iconsax.document_text,
+                  size: 20,
+                  color: Colors.deepPurple,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Description du projet',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2D3748),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            ann.description,
+            style: const TextStyle(
+              fontSize: 15,
+              height: 1.6,
+              color: Color(0xFF4A5568),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildUserActions(Announcement ann) {
+    // Check if current user is the owner using correct property names
+    final isOwner = Get.find<AuthController>().firebaseUser.value?.uid == ann.creatorId;
+
+    if (isOwner) {
+      // Actions pour le propriétaire de l'annonce
+      return [
+        // Section header
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Text(
+            'Gérer votre annonce',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade800,
+            ),
+          ),
+        ),
+        
+        // Bouton voir propositions (style principal)
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple, Colors.deepPurple.shade300],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.deepPurple.withOpacity(0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => Get.to(() => const ProposalsScreen(), arguments: ann),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Iconsax.document_text,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Voir les propositions',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            'Consultez les candidatures reçues',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Iconsax.arrow_right_3,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
         
         if (ann.status == 'ouverte') const SizedBox(height: 16),
         
-        // Bouton supprimer
-        KipostButton(
-          label: 'Supprimer',
-          icon: Iconsax.trash,
-          onPressed: () async {
-            final confirm = await showDialog<bool>(
-              context: Get.context!,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Confirmation'),
-                content: const Text('Supprimer cette annonce ?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: const Text('Annuler'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text('Supprimer'),
-                  ),
-                ],
+        // Bouton supprimer (style danger)
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.red.shade50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.red.shade200,
+              width: 1,
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () async {
+                final confirm = await _showDeleteConfirmation();
+                if (confirm == true) {
+                  await Get.find<AnnouncementController>().deleteAnnouncement(ann.id);
+                  Get.back();
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Iconsax.trash,
+                        color: Colors.red.shade600,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Supprimer l\'annonce',
+                            style: TextStyle(
+                              color: Colors.red.shade700,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            'Cette action est irréversible',
+                            style: TextStyle(
+                              color: Colors.red.shade600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Iconsax.warning_2,
+                      color: Colors.red.shade600,
+                      size: 20,
+                    ),
+                  ],
+                ),
               ),
-            );
-            if (confirm == true) {
-              await Get.find<AnnouncementController>().deleteAnnouncement(ann.id);
-              Get.back();
-            }
-          },
+            ),
+          ),
         ),
       ];
     } else {
       // Actions pour les prestataires potentiels
       return [
+        // Section header
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Text(
+            'Postuler à cette annonce',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade800,
+            ),
+          ),
+        ),
+        
         if (ann.status == 'ouverte')
           FutureBuilder<bool>(
             future: Get.put(ProposalController()).hasUserAlreadyApplied(ann.id),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
+                return Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: const Center(child: CircularProgressIndicator()),
+                );
               }
 
               final hasApplied = snapshot.data ?? false;
 
               if (hasApplied) {
                 return Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.orange.shade200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.orange.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
-                      Icon(Iconsax.clock, color: Colors.orange.shade600),
-                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Iconsax.tick_circle,
+                          color: Colors.orange.shade600,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Proposition envoyée',
+                              'Proposition envoyée !',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 color: Colors.orange.shade700,
+                                fontSize: 16,
                               ),
                             ),
+                            const SizedBox(height: 4),
                             Text(
-                              'Vous avez déjà postulé pour cette annonce',
+                              'Vous avez déjà postulé pour cette annonce. Le créateur examinera votre proposition.',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 13,
                                 color: Colors.orange.shade600,
+                                height: 1.4,
                               ),
                             ),
                           ],
@@ -238,34 +643,125 @@ class AnnouncementDetailScreen extends StatelessWidget {
                 );
               }
 
-              return KipostButton(
-                label: 'Postuler pour cette annonce',
-                icon: Iconsax.send_1,
-                onPressed: () => _showProposalDialog(ann.id),
+              // Bouton postuler avec style attractif
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green, Colors.green.shade400],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => _showProposalDialog(ann.id),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Iconsax.send_1,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Postuler maintenant',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Text(
+                                  'Présentez votre candidature',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.8),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(
+                            Iconsax.arrow_right_3,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               );
             },
           )
         else
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.grey.shade300),
             ),
             child: Row(
               children: [
-                Icon(Iconsax.lock, color: Colors.grey.shade600),
-                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Iconsax.lock,
+                    color: Colors.grey.shade600,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 16),
                 Expanded(
-                  child: Text(
-                    ann.status == 'attribuée' 
-                        ? 'Cette annonce a été attribuée'
-                        : 'Cette annonce n\'est plus disponible',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade600,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        ann.status == 'attribuée' 
+                            ? 'Annonce attribuée'
+                            : 'Annonce fermée',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        ann.status == 'attribuée' 
+                            ? 'Cette annonce a été attribuée à un prestataire'
+                            : 'Cette annonce n\'est plus disponible',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -275,51 +771,308 @@ class AnnouncementDetailScreen extends StatelessWidget {
     }
   }
 
+  Future<bool?> _showDeleteConfirmation() async {
+    return showDialog<bool>(
+      context: Get.context!,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Iconsax.warning_2,
+              color: Colors.red.shade600,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            const Text('Confirmation'),
+          ],
+        ),
+        content: const Text(
+          'Êtes-vous sûr de vouloir supprimer cette annonce ? Cette action est irréversible.',
+          style: TextStyle(height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Annuler',
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showProposalDialog(String announcementId) {
     final TextEditingController messageController = TextEditingController();
     
     showDialog(
       context: Get.context!,
       builder: (context) => AlertDialog(
-        title: const Text('Postuler pour cette annonce'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Expliquez pourquoi vous êtes la bonne personne pour ce travail :'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: messageController,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                hintText: 'Décrivez votre expérience, vos compétences...',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
+        contentPadding: EdgeInsets.zero,
+        content: Container(
+          width: double.maxFinite,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.deepPurple.shade50,
+                Colors.white,
+              ],
+            ),
           ),
-          TextButton(
-            onPressed: () async {
-              if (messageController.text.trim().isNotEmpty) {
-                await Get.put(ProposalController()).sendProposal(
-                  announcementId: announcementId,
-                  message: messageController.text.trim(),
-                );
-                Navigator.pop(context);
-                // Rafraîchir l'état de la page
-                (Get.context as Element).markNeedsBuild();
-              }
-            },
-            child: const Text('Envoyer'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header avec gradient
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.deepPurple, Colors.deepPurple.shade300],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Iconsax.send_1,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Postuler pour cette annonce',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Contenu
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Présentez votre candidature',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Expliquez pourquoi vous êtes la personne idéale pour ce projet :',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                        color: Colors.grey.shade50,
+                      ),
+                      child: TextField(
+                        controller: messageController,
+                        maxLines: 5,
+                        decoration: InputDecoration(
+                          hintText: '• Décrivez votre expérience pertinente\n• Mentionnez vos compétences clés\n• Expliquez votre approche\n• Indiquez vos disponibilités',
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 13,
+                            height: 1.4,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.all(16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Actions
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              'Annuler',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Colors.green, Colors.green.shade400],
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.green.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(10),
+                                onTap: () async {
+                                  if (messageController.text.trim().isNotEmpty) {
+                                    // Afficher un loading
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (ctx) => const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+                                    
+                                    await Get.put(ProposalController()).sendProposal(
+                                      announcementId: announcementId,
+                                      message: messageController.text.trim(),
+                                    );
+                                    
+                                    Navigator.pop(context); // Fermer loading
+                                    Navigator.pop(context); // Fermer dialog
+                                    
+                                    // Rafraîchir l'état de la page
+                                    (Get.context as Element).markNeedsBuild();
+                                    
+                                    // Afficher un message de succès
+                                    Get.snackbar(
+                                      'Succès',
+                                      'Votre proposition a été envoyée !',
+                                      backgroundColor: Colors.green,
+                                      colorText: Colors.white,
+                                      icon: const Icon(Iconsax.tick_circle, color: Colors.white),
+                                    );
+                                  }
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Iconsax.send_1,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Envoyer ma proposition',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
+
+  List<Color> _getStatusColors(String status) {
+    switch (status.toLowerCase()) {
+      case 'ouverte':
+        return [Colors.green, Colors.green.shade400];
+      case 'attribuée':
+        return [Colors.blue, Colors.blue.shade400];
+      case 'fermée':
+        return [Colors.red, Colors.red.shade400];
+      default:
+        return [Colors.grey, Colors.grey.shade400];
+    }
   }
 
+  IconData _getStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'ouverte':
+        return Iconsax.tick_circle;
+      case 'attribuée':
+        return Iconsax.user_tick;
+      case 'fermée':
+        return Iconsax.close_circle;
+      default:
+        return Iconsax.info_circle;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
+      'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+}

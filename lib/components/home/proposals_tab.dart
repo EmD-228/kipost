@@ -4,9 +4,7 @@ import 'package:get/get.dart';
 import 'package:kipost/controllers/proposal_controller.dart';
 import 'package:kipost/models/proposal.dart';
 import 'package:kipost/models/tab_config.dart';
-import 'package:kipost/components/proposal_card.dart';
 import 'package:kipost/components/home/tab_header.dart';
-import 'package:kipost/components/home/empty_state.dart';
 
 class ProposalsTab extends StatefulWidget {
   const ProposalsTab({super.key});
@@ -93,7 +91,7 @@ class _ProposalsTabState extends State<ProposalsTab> {
     );
   }
 
-  // Méthode factorisée pour construire les onglets de propositions
+  // Méthode factorisée pour construire les onglets de propositions avec design simple
   Widget _buildProposalsTabContent({
     required Stream<List<Proposal>> stream,
     required String debugPrefix,
@@ -104,53 +102,437 @@ class _ProposalsTabState extends State<ProposalsTab> {
     required VoidCallback onEmptyPressed,
     required void Function(Proposal) onProposalTap,
   }) {
-    return StreamBuilder<List<Proposal>>(
-      stream: stream,
-      builder: (context, snapshot) {
-        print('🔍 DEBUG: $debugPrefix StreamBuilder state: ${snapshot.connectionState}');
-        print('🔍 DEBUG: $debugPrefix data length: ${snapshot.data?.length}');
-        
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        
-        if (snapshot.hasError) {
-          print('🔍 DEBUG: $debugPrefix error: ${snapshot.error}');
-          return Center(
-            child: Text('Erreur: ${snapshot.error}'),
-          );
-        }
-        
-        final proposals = snapshot.data ?? [];
-        
-        if (proposals.isEmpty) {
-          return EmptyState(
-            icon: emptyIcon,
-            title: emptyTitle,
-            description: emptyDescription,
-            buttonText: emptyButtonText,
-            onPressed: onEmptyPressed,
-          );
-        }
-        
-        return _buildProposalsList(proposals, onProposalTap);
+    // Données fictives pour le design
+    List<Map<String, dynamic>> fakeProposals = [
+      {
+        'id': '1',
+        'title': 'Développement application mobile',
+        'userEmail': 'john.doe@email.com',
+        'userName': 'John Doe',
+        'message': 'Je suis développeur Flutter avec 3 ans d\'expérience. Je peux réaliser votre projet dans les délais.',
+        'status': 'en_attente',
+        'date': 'Il y a 2 heures',
+        'category': 'Développement',
+        'budget': '150 000 FCFA',
       },
+      {
+        'id': '2',
+        'title': 'Design logo et identité visuelle',
+        'userEmail': 'marie.martin@email.com',
+        'userName': 'Marie Martin',
+        'message': 'Designer graphique passionnée, je propose un design moderne et professionnel pour votre marque.',
+        'status': 'acceptée',
+        'date': 'Hier',
+        'category': 'Design',
+        'budget': '75 000 FCFA',
+      },
+      {
+        'id': '3',
+        'title': 'Rédaction contenu web',
+        'userEmail': 'paul.dupont@email.com',
+        'userName': 'Paul Dupont',
+        'message': 'Rédacteur web SEO, je peux créer du contenu optimisé pour votre site internet.',
+        'status': 'refusée',
+        'date': 'Il y a 3 jours',
+        'category': 'Rédaction',
+        'budget': '50 000 FCFA',
+      },
+      {
+        'id': '4',
+        'title': 'Création site e-commerce',
+        'userEmail': 'sophie.blanc@email.com',
+        'userName': 'Sophie Blanc',
+        'message': 'Développeuse web spécialisée e-commerce. Portfolio disponible sur demande.',
+        'status': 'en_attente',
+        'date': 'Il y a 1 semaine',
+        'category': 'Web',
+        'budget': '200 000 FCFA',
+      },
+    ];
+
+    return Container(
+      color: Colors.grey.shade50,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: fakeProposals.length,
+        itemBuilder: (context, index) {
+          final proposal = fakeProposals[index];
+          return _buildSimpleProposalCard(proposal, onProposalTap);
+        },
+      ),
     );
   }
 
-  // Méthode factorisée pour construire la liste des propositions
-  Widget _buildProposalsList(List<Proposal> proposals, void Function(Proposal) onTap) {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: proposals.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, i) {
-        final prop = proposals[i];
-        return ProposalCard(
-          proposal: prop,
-          onTap: () => onTap(prop),
-        );
-      },
+  // Card simple pour les propositions
+  Widget _buildSimpleProposalCard(Map<String, dynamic> proposal, void Function(Proposal) onTap) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            // Simulation d'un tap - ici on peut montrer un dialog
+            _showSimpleProposalDialog(proposal);
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header avec nom et statut
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.blue.shade100,
+                      child: Text(
+                        proposal['userName'].toString().substring(0, 1).toUpperCase(),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            proposal['userName'],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            proposal['userEmail'],
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _buildStatusBadge(proposal['status']),
+                  ],
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Titre du projet
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Iconsax.briefcase,
+                        size: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          proposal['title'],
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Message de la proposition
+                Text(
+                  proposal['message'],
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Footer avec infos
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        proposal['category'],
+                        style: TextStyle(
+                          color: Colors.blue.shade700,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Icon(
+                      Iconsax.money,
+                      size: 14,
+                      color: Colors.green.shade600,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      proposal['budget'],
+                      style: TextStyle(
+                        color: Colors.green.shade600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      Iconsax.clock,
+                      size: 14,
+                      color: Colors.grey.shade500,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      proposal['date'],
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Badge de statut simple
+  Widget _buildStatusBadge(String status) {
+    Color backgroundColor;
+    Color textColor;
+    String label;
+    IconData icon;
+
+    switch (status) {
+      case 'acceptée':
+        backgroundColor = Colors.green.shade50;
+        textColor = Colors.green.shade700;
+        label = 'Acceptée';
+        icon = Iconsax.tick_circle;
+        break;
+      case 'refusée':
+        backgroundColor = Colors.red.shade50;
+        textColor = Colors.red.shade700;
+        label = 'Refusée';
+        icon = Iconsax.close_circle;
+        break;
+      case 'en_attente':
+      default:
+        backgroundColor = Colors.orange.shade50;
+        textColor = Colors.orange.shade700;
+        label = 'En attente';
+        icon = Iconsax.clock;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 12,
+            color: textColor,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Dialog simple pour afficher les détails
+  void _showSimpleProposalDialog(Map<String, dynamic> proposal) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.blue.shade100,
+                    child: Text(
+                      proposal['userName'].toString().substring(0, 1).toUpperCase(),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          proposal['userName'],
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        Text(
+                          proposal['userEmail'],
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _buildStatusBadge(proposal['status']),
+                ],
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Projet
+              Text(
+                'Projet : ${proposal['title']}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Message
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  proposal['message'],
+                  style: const TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Infos complémentaires
+              Row(
+                children: [
+                  Text(
+                    'Budget : ${proposal['budget']}',
+                    style: TextStyle(
+                      color: Colors.green.shade600,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    proposal['date'],
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Actions
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Fermer'),
+                    ),
+                  ),
+                  if (proposal['status'] == 'en_attente') ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Get.snackbar(
+                            'Action simulée',
+                            'Proposition acceptée (simulation)',
+                            backgroundColor: Colors.green,
+                            colorText: Colors.white,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Accepter'),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

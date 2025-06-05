@@ -33,7 +33,7 @@ class _MyHomePageState extends State<MyHomePage> {
       case 1:
         return const ProposalsTab();
       case 2:
-        return const ContractsTab();
+        return const CalendrierTab();
       case 3:
         return const MessagesTab();
       case 4:
@@ -214,11 +214,11 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             BottomNavigationBarItem(
               icon: NavIcon(
-                icon: Iconsax.document,
+                icon: Iconsax.calendar,
                 index: 2,
                 selectedIndex: _selectedIndex,
               ),
-              label: 'Contrats',
+              label: 'Calendrier',
             ),
             BottomNavigationBarItem(
               icon: NavIcon(
