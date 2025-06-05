@@ -8,66 +8,50 @@ class ProposalController extends GetxController {
   final RxList<Proposal> proposals = <Proposal>[].obs;
   final RxBool loading = false.obs;
 
-  // Enrichir une proposition avec les données de l'annonce si elles ne sont pas présentes
-  Future<Proposal> _enrichProposalWithAnnouncement(Proposal proposal) async {
-    if (proposal.announcement != null) {
-      // Les données sont déjà présentes
-      return proposal;
-    }
-    
+  // Get announcement data separately if needed
+  Future<Announcement?> getAnnouncementForProposal(String announcementId) async {
     try {
-      // Récupérer les données de l'annonce
       final announcementDoc = await FirebaseFirestore.instance
           .collection('annonces')
-          .doc(proposal.announcementId)
+          .doc(announcementId)
           .get();
       
       if (announcementDoc.exists) {
-        final announcement = Announcement.fromMap(announcementDoc.data()!, announcementDoc.id);
-        
-        // Créer une nouvelle instance avec les données enrichies
-        return Proposal(
-          id: proposal.id,
-          announcementId: proposal.announcementId,
-          userId: proposal.userId,
-          userEmail: proposal.userEmail,
-          message: proposal.message,
-          createdAt: proposal.createdAt,
-          status: proposal.status,
-          announcement: announcement,
-        );
+        return Announcement.fromMap(announcementDoc.data()!, announcementDoc.id);
       }
     } catch (e) {
-      print('🔍 DEBUG: Error enriching proposal with announcement: $e');
+      print('🔍 DEBUG: Error getting announcement: $e');
     }
     
-    // Retourner la proposition originale si on ne peut pas l'enrichir
-    return proposal;
+    return null;
   }
 
-  Stream<List<Proposal>> getUserProposalsStream() {
+  Future<List<Proposal>> getUserProposals() async {
     final user = FirebaseAuth.instance.currentUser;
-    print('🔍 DEBUG: getUserProposalsStream called for user: ${user?.uid}');
+    print('🔍 DEBUG: getUserProposals called for user: ${user?.uid}');
     
-    return FirebaseFirestore.instance
-        .collection('proposals')
-        .where('userId', isEqualTo: user?.uid)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .asyncMap((snapshot) async {
-          print('🔍 DEBUG: Received ${snapshot.docs.length} proposals from Firestore');
-          
-          final proposalsList = <Proposal>[];
-          for (final doc in snapshot.docs) {
-            print('🔍 DEBUG: Processing proposal doc: ${doc.id} with data: ${doc.data()}');
-            final proposal = Proposal.fromMap(doc.data(), doc.id);
-            final enrichedProposal = await _enrichProposalWithAnnouncement(proposal);
-            proposalsList.add(enrichedProposal);
-          }
-          
-          print('🔍 DEBUG: Converted to ${proposalsList.length} enriched Proposal objects');
-          return proposalsList;
-        });
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('proposals')
+          .where('userId', isEqualTo: user?.uid)
+          .orderBy('createdAt', descending: true)
+          .get();
+      
+      print('🔍 DEBUG: Received ${snapshot.docs.length} proposals from Firestore');
+      
+      final proposalsList = <Proposal>[];
+      for (final doc in snapshot.docs) {
+        print('🔍 DEBUG: Processing proposal doc: ${doc.id} with data: ${doc.data()}');
+        final proposal = Proposal.fromMap(doc.data(), doc.id);
+        proposalsList.add(proposal);
+      }
+      
+      print('🔍 DEBUG: Converted to ${proposalsList.length} Proposal objects');
+      return proposalsList;
+    } catch (e) {
+      print('🔍 DEBUG: Error getting user proposals: $e');
+      return [];
+    }
   }
 
   // Vérifier si l'utilisateur a déjà postulé pour cette annonce
@@ -80,7 +64,9 @@ class ProposalController extends GetxController {
         .get();
     
     return querySnapshot.docs.isNotEmpty;
-  }  Future<void> sendProposal({
+  }
+
+  Future<void> sendProposal({
     required String announcementId,
     required String message,
   }) async {
@@ -100,19 +86,6 @@ class ProposalController extends GetxController {
         return;
       }
 
-      // Récupérer les données de l'annonce
-      final announcementDoc = await FirebaseFirestore.instance
-          .collection('annonces')
-          .doc(announcementId)
-          .get();
-      
-      if (!announcementDoc.exists) {
-        throw Exception('Annonce non trouvée');
-      }
-      
-      final announcement = Announcement.fromMap(announcementDoc.data()!, announcementDoc.id);
-      print('🔍 DEBUG: Retrieved announcement: ${announcement.title}');
-
       final proposalData = {
         'announcementId': announcementId,
         'userId': user?.uid,
@@ -120,8 +93,6 @@ class ProposalController extends GetxController {
         'message': message,
         'createdAt': FieldValue.serverTimestamp(),
         'status': 'en_attente',
-        // Ajouter les données complètes de l'annonce
-        'announcement': announcement.toMap(),
       };
       
       print('🔍 DEBUG: Creating proposal with data: $proposalData');
@@ -155,81 +126,50 @@ class ProposalController extends GetxController {
     }
   }
 
-  // Obtenir les propositions reçues pour les annonces de l'utilisateur connecté
-  Stream<List<Proposal>> getReceivedProposalsStream() {
+  Future<List<Proposal>> getReceivedProposals() async {
     final user = FirebaseAuth.instance.currentUser;
-    print('🔍 DEBUG: getReceivedProposalsStream called for user: ${user?.uid}');
+    print('🔍 DEBUG: getReceivedProposals called for user: ${user?.uid}');
     
-    // Nouvelle approche plus efficace : récupérer les annonces avec leurs proposalIds
-    return FirebaseFirestore.instance
-        .collection('annonces')
-        .where('creatorId', isEqualTo: user?.uid)
-        .snapshots()
-        .asyncMap((announcementSnapshot) async {
-          if (announcementSnapshot.docs.isEmpty) {
-            print('🔍 DEBUG: No announcements found for user');
-            return <Proposal>[];
-          }
-          
-          // Collecter tous les IDs de propositions de toutes les annonces
-          final allProposalIds = <String>[];
-          final announcementMap = <String, Announcement>{}; // Map pour associer proposalId -> announcement
-          
-          for (final doc in announcementSnapshot.docs) {
-            final announcement = Announcement.fromMap(doc.data(), doc.id);
-            for (final proposalId in announcement.proposalIds) {
-              allProposalIds.add(proposalId);
-              announcementMap[proposalId] = announcement;
-            }
-          }
-          
-          if (allProposalIds.isEmpty) {
-            print('🔍 DEBUG: No proposal IDs found in announcements');
-            return <Proposal>[];
-          }
-          
-          print('🔍 DEBUG: Found ${allProposalIds.length} proposal IDs: $allProposalIds');
-          
-          // Récupérer les propositions par batches (Firestore limite à 10 éléments pour whereIn)
-          final proposals = <Proposal>[];
-          final batchSize = 10;
-          
-          for (int i = 0; i < allProposalIds.length; i += batchSize) {
-            final batch = allProposalIds.skip(i).take(batchSize).toList();
-            
-            final batchSnapshot = await FirebaseFirestore.instance
-                .collection('proposals')
-                .where(FieldPath.documentId, whereIn: batch)
-                .get();
-            
-            for (final doc in batchSnapshot.docs) {
-              final proposal = Proposal.fromMap(doc.data(), doc.id);
-              // Ajouter les données de l'annonce directement
-              final announcement = announcementMap[doc.id];
-              if (announcement != null) {
-                final enrichedProposal = Proposal(
-                  id: proposal.id,
-                  announcementId: proposal.announcementId,
-                  userId: proposal.userId,
-                  userEmail: proposal.userEmail,
-                  message: proposal.message,
-                  createdAt: proposal.createdAt,
-                  status: proposal.status,
-                  announcement: announcement,
-                );
-                proposals.add(enrichedProposal);
-              } else {
-                proposals.add(proposal);
-              }
-            }
-          }
-          
-          // Trier par date de création
-          proposals.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          
-          print('🔍 DEBUG: Retrieved ${proposals.length} proposals');
-          return proposals;
-        });
+    if (user?.uid == null) {
+      return [];
+    }
+    
+    try {
+      // Récupérer les IDs des annonces de l'utilisateur
+      final userAnnouncementsQuery = await FirebaseFirestore.instance
+          .collection('annonces')
+          .where('creatorId', isEqualTo: user!.uid)
+          .get();
+      
+      final userAnnouncementIds = userAnnouncementsQuery.docs.map((doc) => doc.id).toList();
+      print('🔍 DEBUG: User owns ${userAnnouncementIds.length} announcements');
+      
+      if (userAnnouncementIds.isEmpty) {
+        return [];
+      }
+      
+      // Récupérer les propositions pour ces annonces
+      final proposalSnapshot = await FirebaseFirestore.instance
+          .collection('proposals')
+          .where('announcementId', whereIn: userAnnouncementIds)
+          .orderBy('createdAt', descending: true)
+          .get();
+      
+      print('🔍 DEBUG: Received ${proposalSnapshot.docs.length} received proposals from Firestore');
+      
+      final proposalsList = <Proposal>[];
+      for (final doc in proposalSnapshot.docs) {
+        print('🔍 DEBUG: Processing received proposal doc: ${doc.id}');
+        final proposal = Proposal.fromMap(doc.data(), doc.id);
+        proposalsList.add(proposal);
+      }
+      
+      print('🔍 DEBUG: Converted to ${proposalsList.length} received Proposal objects');
+      return proposalsList;
+    } catch (e) {
+      print('🔍 DEBUG: Error getting received proposals: $e');
+      return [];
+    }
   }
 
   // ANCIENNE MÉTHODE - gardée pour compatibilité
@@ -258,18 +198,17 @@ class ProposalController extends GetxController {
               .where('announcementId', whereIn: announcementIds)
               .orderBy('createdAt', descending: true)
               .snapshots()
-              .asyncMap((proposalSnapshot) async {
+              .map((proposalSnapshot) {
                 print('🔍 DEBUG: Received ${proposalSnapshot.docs.length} received proposals from Firestore');
                 
                 final proposalsList = <Proposal>[];
                 for (final doc in proposalSnapshot.docs) {
                   print('🔍 DEBUG: Processing received proposal doc: ${doc.id} with data: ${doc.data()}');
                   final proposal = Proposal.fromMap(doc.data(), doc.id);
-                  final enrichedProposal = await _enrichProposalWithAnnouncement(proposal);
-                  proposalsList.add(enrichedProposal);
+                  proposalsList.add(proposal);
                 }
                 
-                print('🔍 DEBUG: Converted to ${proposalsList.length} enriched received Proposal objects');
+                print('🔍 DEBUG: Converted to ${proposalsList.length} received Proposal objects');
                 return proposalsList;
               });
         });

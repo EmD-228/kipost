@@ -17,7 +17,7 @@ class Announcement {
   final DateTime updatedAt;
   final List<String> proposalIds; // Liste des IDs des propositions
   final double? price; // Prix/Budget estimé (optionnel)
-  
+
   // Objets relationnels
   final UserModel? creatorProfile; // Profil du créateur de l'annonce
 
@@ -43,23 +43,26 @@ class Announcement {
       id: docId,
       title: map['title'] ?? '',
       description: map['description'] ?? '',
-      category: Category.getCategoryById(map['category'] ?? '') ?? Category.getCategoryById('autre')!,
-      urgencyLevel: UrgencyLevel.getUrgencyById(map['urgencyLevel'] ?? '') ?? UrgencyLevel.getUrgencyById('modere')!,
+      category: Category.fromMap(map['category'] ?? ''),
+      urgencyLevel: UrgencyLevel.fromMap(map['urgencyLevel'] ?? ''),
       location: map['location'] ?? '',
       status: map['status'] ?? 'open',
       creatorId: map['creatorId'] ?? '',
       creatorEmail: map['creatorEmail'] ?? '',
-      createdAt: (map['createdAt'] != null)
-          ? (map['createdAt'] as Timestamp).toDate()
-          : DateTime.now(),
-      updatedAt: (map['updatedAt'] != null)
-          ? (map['updatedAt'] as Timestamp).toDate()
-          : DateTime.now(),
+      createdAt:
+          (map['createdAt'] != null)
+              ? (map['createdAt'] as Timestamp).toDate()
+              : DateTime.now(),
+      updatedAt:
+          (map['updatedAt'] != null)
+              ? (map['updatedAt'] as Timestamp).toDate()
+              : DateTime.now(),
       proposalIds: List<String>.from(map['proposalIds'] ?? []),
       price: map['price']?.toDouble(),
-      creatorProfile: map['creatorProfile'] != null 
-          ? UserModel.fromMap(map['creatorProfile'], map['creatorId'] ?? '') 
-          : null,
+      creatorProfile:
+          map['creatorProfile'] != null
+              ? UserModel.fromMap(map['creatorProfile'], map['creatorId'] ?? '')
+              : null,
     );
   }
 
@@ -120,7 +123,7 @@ class Announcement {
   bool get isOpen => status == 'open' || status == 'ouverte';
   bool get isClosed => status == 'closed' || status == 'fermee';
   int get proposalCount => proposalIds.length;
-  
+
   // Créer une annonce avec des données de test
   static Announcement createMockAnnouncement({
     String? id,
@@ -136,10 +139,11 @@ class Announcement {
     DateTime? createdAt,
   }) {
     final now = DateTime.now();
-    final category = Category.getCategoryById(categoryId ?? 'aide_menagere') ?? 
-                    Category.getCategoryById('autre')!;
+    final category =
+        Category.getCategoryById(categoryId ?? 'aide_menagere') ??
+        Category.getCategoryById('autre')!;
     final urgencyLevel = UrgencyLevel.getUrgencyById('modere')!;
-    
+
     final creatorProfile = UserModel(
       id: 'mock_creator_${id ?? 'default'}',
       name: creatorName ?? 'Akosua Gyasi',
@@ -152,7 +156,9 @@ class Announcement {
     return Announcement(
       id: id ?? 'mock_announcement',
       title: title ?? 'Service de ménage hebdomadaire',
-      description: description ?? 'Recherche aide ménagère fiable pour entretien hebdomadaire d\'un appartement 3 pièces.',
+      description:
+          description ??
+          'Recherche aide ménagère fiable pour entretien hebdomadaire d\'un appartement 3 pièces.',
       category: category,
       urgencyLevel: urgencyLevel,
       location: location ?? 'Yopougon, Abidjan',
@@ -163,7 +169,10 @@ class Announcement {
       updatedAt: now,
       price: double.tryParse(budget ?? '40000'),
       creatorProfile: creatorProfile,
-      proposalIds: List.generate(proposalCount ?? 0, (index) => 'proposal_$index'),
+      proposalIds: List.generate(
+        proposalCount ?? 0,
+        (index) => 'proposal_$index',
+      ),
     );
   }
 
@@ -175,9 +184,7 @@ class Announcement {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is Announcement &&
-        other.id == id &&
-        other.title == title;
+    return other is Announcement && other.id == id && other.title == title;
   }
 
   @override

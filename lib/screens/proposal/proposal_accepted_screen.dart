@@ -53,10 +53,8 @@ class _ProposalAcceptedScreenState extends State<ProposalAcceptedScreen>
 
     _animationController.forward();
 
-    // Pré-remplir la localisation avec celle de l'annonce
-    if (widget.proposal.announcement?.location != null) {
-      _locationController.text = widget.proposal.announcement!.location;
-    }
+    // La localisation devra être saisie manuellement
+    // (plus d'accès direct aux données de l'annonce)
   }
 
   @override
@@ -150,7 +148,7 @@ class _ProposalAcceptedScreenState extends State<ProposalAcceptedScreen>
       await _workController.scheduleWork(
         proposalId: widget.proposal.id,
         announcementId: widget.proposal.announcementId,
-        clientId: widget.proposal.announcement!.creatorId,
+        clientId: 'unknown', // TODO: Get creator ID from announcement
         providerId: widget.proposal.userId,
         scheduledDate: _selectedDate!,
         scheduledTime: _formatTime(_selectedTime!),
@@ -363,54 +361,53 @@ class _ProposalAcceptedScreenState extends State<ProposalAcceptedScreen>
                           ),
                           const SizedBox(height: 20),
                           
-                          if (widget.proposal.announcement != null) ...[
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.deepPurple.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.proposal.announcement!.title,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    widget.proposal.announcement!.description,
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        widget.proposal.announcement!.category.icon, 
-                                        size: 16, 
-                                        color: Colors.blue
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        widget.proposal.announcement!.category.name,
-                                        style: TextStyle(
-                                          color: Colors.blue,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                          // Informations sur l'annonce
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.deepPurple.shade50,
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            const SizedBox(height: 16),
-                          ],
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Annonce ID: ${widget.proposal.announcementId.substring(0, 8)}...',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Proposition pour cette annonce',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade700,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Iconsax.category, 
+                                      size: 16, 
+                                      color: Colors.blue
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Catégorie',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
 
                           // Message de la proposition
                           Container(

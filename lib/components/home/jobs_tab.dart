@@ -160,8 +160,6 @@ class _JobsTabState extends State<JobsTab> {
                 delegate: SliverChildBuilderDelegate((context, index) {
                   return Padding(
                     padding: EdgeInsets.only(
-                      left: 16,
-                      right: 16,
                       bottom: index == announcements.length - 1 ? 100 : 16,
                     ),
                     child: _buildAnnouncementCard(announcements[index]),
@@ -183,7 +181,7 @@ class _JobsTabState extends State<JobsTab> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        // borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(

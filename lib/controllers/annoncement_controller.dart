@@ -102,12 +102,12 @@ class AnnouncementController extends GetxController {
       if (categoryId != null) {
         final category = Category.getCategoryById(categoryId);
         if (category == null) throw Exception('Catégorie invalide');
-        updateData['category'] = categoryId;
+        updateData['category'] = category;
       }
       if (urgencyLevelId != null) {
         final urgencyLevel = UrgencyLevel.getUrgencyById(urgencyLevelId);
         if (urgencyLevel == null) throw Exception('Niveau d\'urgence invalide');
-        updateData['urgencyLevel'] = urgencyLevelId;
+        updateData['urgencyLevel'] = urgencyLevel;
       }
       if (location != null) updateData['location'] = location;
       if (price != null) updateData['price'] = price;
@@ -190,10 +190,10 @@ class AnnouncementController extends GetxController {
 
     // Filtres optionnels
     if (categoryId != null && categoryId.isNotEmpty) {
-      query = query.where('category', isEqualTo: categoryId);
+      query = query.where('category', isEqualTo: Category.getCategoryById(categoryId));
     }
     if (urgencyLevelId != null && urgencyLevelId.isNotEmpty) {
-      query = query.where('urgencyLevel', isEqualTo: urgencyLevelId);
+      query = query.where('urgencyLevel', isEqualTo: UrgencyLevel.getUrgencyById(urgencyLevelId));
     }
     if (status != null && status.isNotEmpty) {
       query = query.where('status', isEqualTo: status);
@@ -219,7 +219,7 @@ class AnnouncementController extends GetxController {
           
           announcements.add(announcement);
         } catch (e) {
-          print('Erreur lors de la construction de l\'annonce ${doc.id}: $e');
+          printInfo(info:'Erreur lors de la construction de l\'annonce ${doc.data()}: $e');
         }
       }
       
