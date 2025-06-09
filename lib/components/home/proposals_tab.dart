@@ -82,7 +82,7 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
         }
       },
       onProposalTap: (proposal) {
-        Get.toNamed('/announcement-detail', arguments: proposal.announcementId);
+        Get.toNamed('/proposal-detail', arguments: proposal);
       },
       onRefresh: () {
         setState(() {
@@ -103,7 +103,9 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
       emptyDescription: 'Vous n\'avez reçu aucune proposition\npour vos annonces. Créez une annonce\npour recevoir des propositions !',
       emptyButtonText: 'Créer une annonce',
       onEmptyPressed: () => Get.toNamed('/create-announcement'),
-      onProposalTap: (proposal) => _showProposalDetailsDialog(proposal),
+      onProposalTap: (proposal) {
+        Get.toNamed('/proposal-detail', arguments: proposal);
+      },
       onRefresh: () {
         setState(() {
           _receivedProposalsKey++;
@@ -509,190 +511,5 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
         ],
       ),
     );
-  }
-
-  // Dialogue pour les détails des propositions reçues
-  void _showProposalDetailsDialog(Proposal proposal) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Row(
-          children: [
-            Icon(Iconsax.user, color: Colors.deepPurple),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Proposition de ${proposal.userEmail}',
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Informations sur l'annonce
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.deepPurple.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.deepPurple.shade200),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Iconsax.briefcase, size: 16, color: Colors.deepPurple),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Annonce concernée',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Annonce ID: ${proposal.announcementId.substring(0, 8)}...',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Iconsax.category, size: 12, color: Colors.blue),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Catégorie',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Icon(Iconsax.location, size: 12, color: Colors.grey.shade600),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          'Localisation',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 12,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Message:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(proposal.message),
-            const SizedBox(height: 16),
-            Text(
-              'Statut: ${proposal.status}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: _getStatusColor(proposal.status),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
-          ),
-          if (proposal.status == 'en_attente') ...[
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _updateProposalStatus(proposal.id, 'refusée');
-              },
-              child: const Text(
-                'Refuser',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _acceptProposal(proposal);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-              ),
-              child: const Text(
-                'Accepter',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  // Mettre à jour le statut d'une proposition
-  void _updateProposalStatus(String proposalId, String newStatus) {
-    proposalController.updateProposalStatus(proposalId, newStatus).then((_) {
-      Get.snackbar(
-        'Succès',
-        'Proposition ${newStatus} avec succès',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-      // Rafraîchir les données
-      setState(() {
-        _receivedProposalsKey++;
-      });
-    }).catchError((error) {
-      Get.snackbar(
-        'Erreur',
-        'Erreur lors de la mise à jour: $error',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    });
-  }
-
-  // Accepter une proposition et rediriger vers la page de planification
-  void _acceptProposal(Proposal proposal) {
-    // Rediriger vers la page de planification intégrée
-    Get.toNamed('/proposal-accepted', arguments: proposal);
-  }
-
-  // Obtenir la couleur selon le statut
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'acceptée':
-        return Colors.green;
-      case 'refusée':
-        return Colors.red;
-      case 'en_attente':
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
   }
 }

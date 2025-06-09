@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -120,7 +121,9 @@ class ProposalController extends GetxController {
       loading.value = false;
       Get.snackbar('Succès', 'Proposition envoyée !', backgroundColor: Get.theme.colorScheme.secondaryContainer);
     } catch (e) {
-      print('🔍 DEBUG: Error sending proposal: $e');
+      if (kDebugMode) {
+        print('🔍 DEBUG: Error sending proposal: $e');
+      }
       loading.value = false;
       Get.snackbar('Erreur', 'Erreur lors de l\'envoi : $e', backgroundColor: Get.theme.colorScheme.errorContainer);
     }
@@ -226,7 +229,7 @@ class ProposalController extends GetxController {
             'status': newStatus,
             'updatedAt': FieldValue.serverTimestamp(),
           });
-      
+      await getReceivedProposals();
       print('🔍 DEBUG: Proposal status updated successfully');
     } catch (e) {
       print('🔍 DEBUG: Error updating proposal status: $e');
@@ -280,6 +283,29 @@ class ProposalController extends GetxController {
       
     } catch (e) {
       print('🔍 DIAGNOSTIC ERROR: $e');
+    }
+  }
+
+  // Get proposal by ID
+  Future<Proposal?> getProposalById(String proposalId) async {
+    try {
+      print('🔍 DEBUG: getProposalById called for ID: $proposalId');
+      
+      final proposalDoc = await FirebaseFirestore.instance
+          .collection('proposals')
+          .doc(proposalId)
+          .get();
+      
+      if (proposalDoc.exists) {
+        print('🔍 DEBUG: Proposal found with data: ${proposalDoc.data()}');
+        return Proposal.fromMap(proposalDoc.data()!, proposalDoc.id);
+      } else {
+        print('🔍 DEBUG: No proposal found with ID: $proposalId');
+        return null;
+      }
+    } catch (e) {
+      print('🔍 DEBUG: Error getting proposal by ID: $e');
+      return null;
     }
   }
 }
