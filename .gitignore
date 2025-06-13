@@ -33,6 +33,8 @@ migrate_working_dir/
 .pub/
 /build/
 
+README2.md
+
 # Symbolication related
 app.*.symbols
 
