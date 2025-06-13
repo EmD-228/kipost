@@ -145,6 +145,7 @@ class Announcement {
     final urgencyLevel = UrgencyLevel.getUrgencyById('modere')!;
 
     final creatorProfile = UserModel(
+      // userType: "",
       id: 'mock_creator_${id ?? 'default'}',
       name: creatorName ?? 'Akosua Gyasi',
       email: 'creator@example.com',

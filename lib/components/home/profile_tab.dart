@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:kipost/controllers/auth_controller.dart';
+import 'package:kipost/app_route.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
@@ -187,12 +188,7 @@ class ProfileTab extends StatelessWidget {
             title: 'Modifier le profil',
             subtitle: 'Nom, photo, informations personnelles',
             onTap: () {
-              Get.snackbar(
-                'Profil',
-                'Fonctionnalité de modification à venir',
-                backgroundColor: Colors.blue.shade100,
-                colorText: Colors.blue.shade800,
-              );
+              Get.toNamed(AppRoutes.profile);
             },
           ),
           _buildMenuItem(

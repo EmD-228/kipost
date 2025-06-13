@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:get/get.dart';
-import 'package:kipost/controllers/annoncement_controller.dart';
+import 'package:kipost/controllers/announcement_controller.dart';
 import 'package:kipost/models/category.dart';
 import 'package:kipost/models/urgency_level.dart';
 

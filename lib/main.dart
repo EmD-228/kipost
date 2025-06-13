@@ -3,7 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
 import 'package:kipost/app_route.dart';
-import 'package:kipost/controllers/annoncement_controller.dart';
+import 'package:kipost/controllers/announcement_controller.dart';
 import 'package:kipost/controllers/proposal_controller.dart';
 import 'package:kipost/controllers/calendar_controller.dart';
 import 'package:kipost/controllers/notification_controller.dart';

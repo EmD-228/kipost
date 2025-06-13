@@ -5,7 +5,7 @@ import 'package:kipost/models/announcement.dart';
 import 'package:kipost/models/category.dart';
 import 'package:kipost/components/home/search_bar.dart' as custom;
 import 'package:kipost/components/home/filter_chips.dart';
-import 'package:kipost/controllers/annoncement_controller.dart';
+import 'package:kipost/controllers/announcement_controller.dart';
 
 class JobsTab extends StatefulWidget {
   const JobsTab({super.key});

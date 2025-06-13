@@ -4,6 +4,8 @@ class UserModel {
   final String id;
   final String name;
   final String email;
+  final bool isClient; // Peut poster des annonces
+  final bool isProvider; // Peut répondre aux annonces
   final String? avatar;
   final String? phone;
   final String? location;
@@ -15,6 +17,8 @@ class UserModel {
     required this.id,
     required this.name,
     required this.email,
+    this.isClient = true, // Par défaut, tout le monde peut être client
+    this.isProvider = false, // Le rôle prestataire doit être activé
     this.avatar,
     this.phone,
     this.location,
@@ -29,6 +33,8 @@ class UserModel {
       id: docId,
       name: map['name'] ?? '',
       email: map['email'] ?? '',
+      isClient: map['isClient'] ?? true,
+      isProvider: map['isProvider'] ?? false,
       avatar: map['avatar'],
       phone: map['phone'],
       location: map['location'],
@@ -47,6 +53,8 @@ class UserModel {
     return {
       'name': name,
       'email': email,
+      'isClient': isClient,
+      'isProvider': isProvider,
       'avatar': avatar,
       'phone': phone,
       'location': location,
@@ -61,6 +69,8 @@ class UserModel {
     String? id,
     String? name,
     String? email,
+    bool? isClient,
+    bool? isProvider,
     String? avatar,
     String? phone,
     String? location,
@@ -72,6 +82,8 @@ class UserModel {
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
+      isClient: isClient ?? this.isClient,
+      isProvider: isProvider ?? this.isProvider,
       avatar: avatar ?? this.avatar,
       phone: phone ?? this.phone,
       location: location ?? this.location,
@@ -79,6 +91,17 @@ class UserModel {
       updatedAt: updatedAt ?? this.updatedAt,
       isActive: isActive ?? this.isActive,
     );
+  }
+
+  // Méthodes utilitaires pour les rôles
+  bool get canCreateAnnouncements => isClient;
+  bool get canSubmitProposals => isProvider;
+  bool get hasBothRoles => isClient && isProvider;
+  
+  String get primaryRole {
+    if (hasBothRoles) return 'Client & Prestataire';
+    if (isProvider) return 'Prestataire';
+    return 'Client';
   }
 
   @override

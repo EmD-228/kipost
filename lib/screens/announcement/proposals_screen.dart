@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:kipost/components/proposal_card.dart';
-import 'package:kipost/controllers/annoncement_controller.dart';
+import 'package:kipost/controllers/announcement_controller.dart';
 import 'package:kipost/models/announcement.dart';
 import 'package:kipost/components/kipost_button.dart';
 

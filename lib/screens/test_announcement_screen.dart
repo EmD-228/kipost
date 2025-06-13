@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:kipost/controllers/annoncement_controller.dart';
+import 'package:kipost/controllers/announcement_controller.dart';
 import 'package:kipost/models/announcement.dart';
 
 class TestAnnouncementScreen extends StatefulWidget {

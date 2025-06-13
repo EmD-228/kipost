@@ -14,12 +14,15 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _acceptTerms = false;
+  bool _isClient = true; // Par défaut client
+  bool _isProvider = false; // Optionnel prestataire
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
@@ -35,12 +38,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     
+    if (!_isClient && !_isProvider) {
+      Get.snackbar(
+        'Erreur', 
+        'Vous devez sélectionner au moins un rôle',
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.black,
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+    
     setState(() => _isLoading = true);
     
     try {
       await AuthController.to.register(
         _emailController.text.trim(),
         _passwordController.text.trim(),
+        _nameController.text.trim(),
+        _isClient,
+        _isProvider,
       );
       Get.snackbar(
         'Succès', 
@@ -181,6 +198,90 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     child: Column(
                       children: [
+                        KipostTextField(
+                          controller: _nameController,
+                          label: 'Nom complet',
+                          icon: Iconsax.user,
+                          keyboardType: TextInputType.name,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Veuillez saisir votre nom';
+                            }
+                            if (value.length < 2) {
+                              return 'Le nom doit contenir au moins 2 caractères';
+                            }
+                            return null;
+                          },
+                        ),
+                        
+                        const SizedBox(height: 20),
+                        
+                        // Role selection
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Iconsax.user_tag, size: 20, color: Colors.deepPurple),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Je souhaite :',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              CheckboxListTile(
+                                title: const Text('Rechercher des services'),
+                                subtitle: const Text('Poster des annonces (Client)'),
+                                value: _isClient,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isClient = value ?? true;
+                                  });
+                                },
+                                activeColor: Colors.deepPurple,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              CheckboxListTile(
+                                title: const Text('Proposer des services'),
+                                subtitle: const Text('Répondre aux annonces (Prestataire)'),
+                                value: _isProvider,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isProvider = value ?? false;
+                                  });
+                                },
+                                activeColor: Colors.deepPurple,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              if (!_isClient && !_isProvider)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Text(
+                                    'Vous devez sélectionner au moins un rôle',
+                                    style: TextStyle(
+                                      color: Colors.red.shade600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 20),
+                        
                         KipostTextField(
                           controller: _emailController,
                           label: 'Adresse email',
@@ -399,6 +500,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();

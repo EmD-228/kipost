@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kipost/app_route.dart';
+import 'package:kipost/models/user.dart';
 
 class AuthController extends GetxController {
   static AuthController get to => Get.find();
@@ -27,11 +29,30 @@ class AuthController extends GetxController {
     });
   }
 
-  Future<void> register(String email, String password) async {
-    await FirebaseAuth.instance.createUserWithEmailAndPassword(
+  Future<void> register(String email, String password, String name, bool isClient, bool isProvider) async {
+    // Create user with Firebase Auth
+    final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
+    
+    // Create user profile in Firestore
+    if (userCredential.user != null) {
+      final user = UserModel(
+        id: userCredential.user!.uid,
+        name: name,
+        email: email,
+        isClient: isClient,
+        isProvider: isProvider,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set(user.toMap());
+    }
   }
 
   Future<void> login(String email, String password) async {
@@ -47,5 +68,37 @@ class AuthController extends GetxController {
 
   Future<void> resetPassword(String email) async {
     await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+  }
+
+  // Get current user profile from Firestore
+  Future<UserModel?> getCurrentUserProfile() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+    
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      
+      if (doc.exists) {
+        return UserModel.fromMap(doc.data()!, doc.id);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting user profile: $e');
+      return null;
+    }
+  }
+
+  // Update user profile
+  Future<void> updateUserProfile(UserModel updatedUser) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .update(updatedUser.copyWith(updatedAt: DateTime.now()).toMap());
   }
 }
