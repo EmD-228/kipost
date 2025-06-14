@@ -4,8 +4,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/proposal.dart';
 import '../models/announcement.dart';
+import '../utils/app_status.dart';
+import 'work_controller.dart';
 
 class ProposalController extends GetxController {
+  final WorkController _workController = Get.find<WorkController>();
+  
   final RxList<Proposal> proposals = <Proposal>[].obs;
   final RxBool loading = false.obs;
 
@@ -93,7 +97,7 @@ class ProposalController extends GetxController {
         'userEmail': user?.email,
         'message': message,
         'createdAt': FieldValue.serverTimestamp(),
-        'status': 'en_attente',
+        'status': ProposalStatus.pending,
       };
       
       print('🔍 DEBUG: Creating proposal with data: $proposalData');
@@ -218,21 +222,102 @@ class ProposalController extends GetxController {
   }
 
   // Mettre à jour le statut d'une proposition
-  Future<void> updateProposalStatus(String proposalId, String newStatus) async {
+  Future<void> updateProposalStatus(String proposalId, String newStatus,{String? workDetailId}) async {
     try {
       print('🔍 DEBUG: Updating proposal $proposalId to status: $newStatus');
+      
+      final updateData = {
+        'status': newStatus,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+      
+      if (workDetailId != null) {
+        updateData['workDetailId'] = workDetailId;
+      }
       
       await FirebaseFirestore.instance
           .collection('proposals')
           .doc(proposalId)
-          .update({
-            'status': newStatus,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+          .update(updateData);
       await getReceivedProposals();
       print('🔍 DEBUG: Proposal status updated successfully');
     } catch (e) {
       print('🔍 DEBUG: Error updating proposal status: $e');
+      throw e;
+    }
+  }
+
+  // Accepter une proposition et créer les détails du travail
+  Future<void> acceptProposal(String proposalId) async {
+    try {
+      print('🔍 DEBUG: Accepting proposal $proposalId');
+      
+      // Récupérer les détails de la proposition
+      final proposal = await getProposalById(proposalId);
+      if (proposal == null) {
+        throw Exception('Proposition introuvable');
+      }
+
+      // Récupérer les détails de l'annonce
+      final announcement = await getAnnouncementForProposal(proposal.announcementId);
+      if (announcement == null) {
+        throw Exception('Annonce introuvable');
+      }
+
+      // Créer le work_details
+      final workDetailId = await _workController.createWorkDetails(
+        proposalId: proposalId,
+        announcementId: proposal.announcementId,
+        clientId: announcement.creatorId,
+        providerId: proposal.userId,
+      );
+
+      if (workDetailId == null) {
+        throw Exception('Erreur lors de la création des détails du travail');
+      }
+
+      // Mettre à jour le statut de la proposition avec l'ID du work_details
+      await updateProposalStatus(proposalId, ProposalStatus.accepted, workDetailId: workDetailId);
+
+      Get.snackbar(
+        'Succès',
+        'Proposition acceptée ! Les détails du travail ont été créés.',
+        backgroundColor: Get.theme.colorScheme.secondaryContainer,
+      );
+      
+      print('🔍 DEBUG: Proposal accepted and work details created with ID: $workDetailId');
+    } catch (e) {
+      print('🔍 DEBUG: Error accepting proposal: $e');
+      Get.snackbar(
+        'Erreur',
+        'Erreur lors de l\'acceptation : $e',
+        backgroundColor: Get.theme.colorScheme.errorContainer,
+      );
+      throw e;
+    }
+  }
+
+  // Rejeter une proposition
+  Future<void> rejectProposal(String proposalId) async {
+    try {
+      print('🔍 DEBUG: Rejecting proposal $proposalId');
+      
+      await updateProposalStatus(proposalId, ProposalStatus.rejected);
+
+      Get.snackbar(
+        'Information',
+        'Proposition rejetée.',
+        backgroundColor: Get.theme.colorScheme.secondaryContainer,
+      );
+      
+      print('🔍 DEBUG: Proposal rejected successfully');
+    } catch (e) {
+      print('🔍 DEBUG: Error rejecting proposal: $e');
+      Get.snackbar(
+        'Erreur',
+        'Erreur lors du rejet : $e',
+        backgroundColor: Get.theme.colorScheme.errorContainer,
+      );
       throw e;
     }
   }

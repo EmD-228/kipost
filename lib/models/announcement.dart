@@ -120,8 +120,8 @@ class Announcement {
   }
 
   // Méthodes utilitaires
-  bool get isOpen => status == 'open' || status == 'ouverte';
-  bool get isClosed => status == 'closed' || status == 'fermee';
+  bool get isOpen => status == 'active' || status == 'ouverte';
+  bool get isClosed => status == 'cancelled' || status == 'fermee';
   int get proposalCount => proposalIds.length;
 
   // Créer une annonce avec des données de test

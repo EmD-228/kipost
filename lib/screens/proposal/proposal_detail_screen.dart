@@ -1,13 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:kipost/controllers/work_controller.dart';
-import 'package:kipost/controllers/proposal_controller.dart';
-import 'package:kipost/components/kipost_button.dart';
 import 'package:kipost/components/kipost_textfield.dart';
 import 'package:kipost/models/proposal.dart';
 import 'package:kipost/models/announcement.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:kipost/controllers/proposal_controller.dart';
+import 'package:kipost/controllers/work_controller.dart';
+import 'package:kipost/components/kipost_button.dart';
+import 'package:kipost/models/work_details.dart';
+import 'package:kipost/utils/app_status.dart';
 
 class ProposalDetailScreen extends StatefulWidget {
   final Proposal proposal;
@@ -32,6 +34,7 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
   final ProposalController _proposalController = Get.put(ProposalController());
 
   late Proposal currentProposal;
+  late WorkDetails currentWorkDetails;
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   bool _showScheduleForm = false;
@@ -47,7 +50,7 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
     super.initState();
     // Initialize currentProposal with the proposal passed in widget
     currentProposal = widget.proposal;
-    
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -73,6 +76,13 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
       final announcement = await _proposalController.getAnnouncementForProposal(
         currentProposal.announcementId,
       );
+      await _workController.getWorkDetailsByProposal(currentProposal.id).then((
+        workDetails,
+      ) {
+        if (workDetails != null) {
+          currentWorkDetails = workDetails;
+        }
+      });
       setState(() {
         _announcement = announcement;
         _loadingAnnouncement = false;
@@ -114,6 +124,7 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    printInfo(info: 'Current Proposal: ${currentProposal.toMap()}');
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -146,13 +157,15 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
                 const SizedBox(height: 20),
                 _buildMessageCard(),
                 const SizedBox(height: 20),
-                if (currentProposal.status == 'en_attente' &&
+                if (currentProposal.status == 'pending' &&
                     _isCurrentUserReceiver)
                   _buildActionsButtons(),
-                if (currentProposal.status == 'acceptée' &&
+                if (currentProposal.status == 'accepted' &&
+                    currentProposal.workDetailId.isEmpty &&
                     _isCurrentUserReceiver)
                   _buildScheduleCard(),
-                if (currentProposal.status == 'planned' &&
+                if (currentProposal.status == 'accepted' &&
+                    currentProposal.workDetailId.isNotEmpty &&
                     _isCurrentUserReceiver)
                   _buildPlannedWorkCard(),
                 // const SizedBox(height: 100),
@@ -170,7 +183,7 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
         Expanded(
           child: ElevatedButton(
             onPressed: () {
-              _updateProposalStatus('refusée');
+              _updateProposalStatus(ProposalStatus.rejected);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
@@ -178,14 +191,24 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
 
-            child: Text("Refuser"),
+            child: Text("rejected"),
           ),
         ),
         const SizedBox(width: 20),
         Expanded(
           child: ElevatedButton(
-            onPressed: () {
-              _updateProposalStatus('acceptée');
+            onPressed: () async {
+              _updateProposalStatus(ProposalStatus.accepted);
+              /*  await _workController
+                  .createWorkDetails(
+                    proposalId: currentProposal.id,
+                    announcementId: currentProposal.announcementId,
+                    clientId: _announcement?.creatorId ?? 'unknown',
+                    providerId: currentProposal.userId,
+                  )
+                  .then((id) {
+                    // Update the proposal status to 'acceptée'
+                  }); */
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
@@ -665,29 +688,23 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
     IconData icon;
 
     switch (status) {
-      case 'acceptée':
+      case ProposalStatus.accepted:
         backgroundColor = Colors.green.shade50;
         textColor = Colors.green.shade700;
-        label = 'Acceptée';
+        label = ProposalStatus.getLabel(status);
         icon = Iconsax.tick_circle;
         break;
-      case 'refusée':
+      case ProposalStatus.rejected:
         backgroundColor = Colors.red.shade50;
         textColor = Colors.red.shade700;
-        label = 'Refusée';
+        label = ProposalStatus.getLabel(status);
         icon = Iconsax.close_circle;
         break;
-      case 'planned':
-        backgroundColor = Colors.blue.shade50;
-        textColor = Colors.blue.shade700;
-        label = 'Programmé';
-        icon = Iconsax.close_circle;
-        break;
-      case 'en_attente':
+      case ProposalStatus.pending:
       default:
         backgroundColor = Colors.orange.shade50;
         textColor = Colors.orange.shade700;
-        label = 'En attente';
+        label = ProposalStatus.getLabel(status);
         icon = Iconsax.clock;
     }
 
@@ -804,10 +821,12 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
     }
 
     try {
+      // _updateProposalStatus('planned');
+
       await _workController
           .scheduleWork(
-            proposalId: currentProposal.id,
             announcementId: currentProposal.announcementId,
+            proposalId: currentProposal.id,
             clientId: _announcement?.creatorId ?? 'unknown',
             providerId: currentProposal.userId,
             scheduledDate: _selectedDate!,
@@ -815,8 +834,12 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
             workLocation: _locationController.text.trim(),
             additionalNotes: _notesController.text.trim(),
           )
-          .then((onValue) {
-            _updateProposalStatus('planned');
+          .then((workDetailId) async {
+            // Update the proposal status to 'planned'
+            await _updateProposalStatus(
+              currentProposal.status,
+              workDetailId: workDetailId,
+            );
           });
 
       Get.snackbar(
@@ -838,11 +861,15 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
     }
   }
 
-  Future<void> _updateProposalStatus(String newStatus) async {
+  Future<void> _updateProposalStatus(
+    String newStatus, {
+    String? workDetailId,
+  }) async {
     try {
       await _proposalController.updateProposalStatus(
         currentProposal.id,
         newStatus,
+        workDetailId: workDetailId,
       );
 
       Get.snackbar(
@@ -863,6 +890,7 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
           message: currentProposal.message,
           createdAt: currentProposal.createdAt,
           status: newStatus,
+          workDetailId: workDetailId ?? "",
         );
       });
     } catch (e) {
@@ -935,7 +963,10 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.blue.shade50,
                   borderRadius: BorderRadius.circular(20),
@@ -952,9 +983,9 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Informations de planification
           Container(
             padding: const EdgeInsets.all(16),
@@ -970,32 +1001,49 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
                   icon: Iconsax.calendar,
                   color: Colors.blue.shade600,
                   label: 'Date',
-                  value: 'À définir', // TODO: Récupérer la vraie date depuis WorkDetails
+                  value: currentWorkDetails.scheduledDate != null
+                      ? _formatDate(currentWorkDetails.scheduledDate!)
+                      : 'À définir',
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Heure
                 _buildPlanningInfoRow(
                   icon: Iconsax.clock,
                   color: Colors.orange.shade600,
                   label: 'Heure',
-                  value: 'À définir', // TODO: Récupérer la vraie heure depuis WorkDetails
+                  value: currentWorkDetails.scheduledTime != null && currentWorkDetails.scheduledTime!.isNotEmpty
+                      ? currentWorkDetails.scheduledTime!
+                      : 'À définir',
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Lieu
                 _buildPlanningInfoRow(
                   icon: Iconsax.location,
                   color: Colors.green.shade600,
                   label: 'Lieu',
-                  value: 'À définir', // TODO: Récupérer le vrai lieu depuis WorkDetails
+                  value: currentWorkDetails.workLocation != null && currentWorkDetails.workLocation!.isNotEmpty
+                      ? currentWorkDetails.workLocation!
+                      : 'À définir',
+                ),
+                const SizedBox(height: 16),
+
+                // Notes additionnelles
+                _buildPlanningInfoRow(
+                  icon: Iconsax.note,
+                  color: Colors.purple.shade600,
+                  label: 'Notes',
+                  value: currentWorkDetails.additionalNotes != null && currentWorkDetails.additionalNotes!.isNotEmpty
+                      ? currentWorkDetails.additionalNotes!
+                      : 'Aucune note',
                 ),
               ],
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Actions
           Row(
             children: [
@@ -1004,7 +1052,11 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
                   onPressed: () {
                     // TODO: Naviguer vers les détails du travail ou permettre modification
                   },
-                  icon: Icon(Iconsax.edit, size: 18, color: Colors.blue.shade600),
+                  icon: Icon(
+                    Iconsax.edit,
+                    size: 18,
+                    color: Colors.blue.shade600,
+                  ),
                   label: Text(
                     'Modifier',
                     style: TextStyle(color: Colors.blue.shade600),

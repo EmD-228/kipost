@@ -6,10 +6,10 @@ class Proposal {
   final String userId;
   final String userEmail;
   final String message;
+  final String workDetailId;
+
   final DateTime createdAt;
   final String status; // exemple: en_attente, acceptée, refusée
-  
- 
 
   Proposal({
     required this.id,
@@ -19,24 +19,31 @@ class Proposal {
     required this.message,
     required this.createdAt,
     required this.status,
- 
+    this.workDetailId = '',
   });
 
   factory Proposal.fromMap(Map<String, dynamic> map, String docId) {
     print('🔍 DEBUG: Proposal.fromMap called with docId: $docId, map: $map');
-    
+
     try {
       final proposal = Proposal(
         id: docId,
         announcementId: map['announcementId'] ?? '',
         userId: map['userId'] ?? '',
         userEmail: map['userEmail'] ?? '',
+        workDetailId: map['workDetailId'] ?? '',
+
         message: map['message'] ?? '',
-        createdAt: map['createdAt'] != null ? (map['createdAt'] as Timestamp).toDate() : DateTime.now(),
+        createdAt:
+            map['createdAt'] != null
+                ? (map['createdAt'] as Timestamp).toDate()
+                : DateTime.now(),
         status: map['status'] ?? 'en_attente',
       );
-      
-      print('🔍 DEBUG: Proposal created successfully: ${proposal.id} - ${proposal.message}');
+
+      print(
+        '🔍 DEBUG: Proposal created successfully: ${proposal.id} - ${proposal.message}',
+      );
       return proposal;
     } catch (e) {
       print('🔍 DEBUG: Error creating Proposal from map: $e');
@@ -49,13 +56,13 @@ class Proposal {
       'announcementId': announcementId,
       'userId': userId,
       'userEmail': userEmail,
+      'workDetailId': workDetailId,
+
       'message': message,
       'createdAt': createdAt,
       'status': status,
     };
-    
- 
-    
+
     return map;
   }
 }

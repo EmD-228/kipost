@@ -6,9 +6,9 @@ class WorkDetails {
   final String announcementId;
   final String clientId;
   final String providerId;
-  final DateTime scheduledDate;
-  final String scheduledTime; // Format: "14:30"
-  final String workLocation;
+  final DateTime? scheduledDate;
+  final String? scheduledTime; // Format: "14:30"
+  final String? workLocation;
   final String? additionalNotes;
   final String status; // 'planned', 'in_progress', 'completed', 'cancelled'
   final DateTime createdAt;
@@ -20,9 +20,9 @@ class WorkDetails {
     required this.announcementId,
     required this.clientId,
     required this.providerId,
-    required this.scheduledDate,
-    required this.scheduledTime,
-    required this.workLocation,
+    this.scheduledDate,
+    this.scheduledTime,
+    this.workLocation,
     this.additionalNotes,
     required this.status,
     required this.createdAt,
@@ -36,9 +36,11 @@ class WorkDetails {
       announcementId: map['announcementId'] ?? '',
       clientId: map['clientId'] ?? '',
       providerId: map['providerId'] ?? '',
-      scheduledDate: (map['scheduledDate'] as Timestamp).toDate(),
-      scheduledTime: map['scheduledTime'] ?? '',
-      workLocation: map['workLocation'] ?? '',
+      scheduledDate: map['scheduledDate'] != null 
+          ? (map['scheduledDate'] as Timestamp).toDate() 
+          : null,
+      scheduledTime: map['scheduledTime'],
+      workLocation: map['workLocation'],
       additionalNotes: map['additionalNotes'],
       status: map['status'] ?? 'planned',
       createdAt: (map['createdAt'] as Timestamp).toDate(),
@@ -54,7 +56,7 @@ class WorkDetails {
       'announcementId': announcementId,
       'clientId': clientId,
       'providerId': providerId,
-      'scheduledDate': Timestamp.fromDate(scheduledDate),
+      'scheduledDate': scheduledDate != null ? Timestamp.fromDate(scheduledDate!) : null,
       'scheduledTime': scheduledTime,
       'workLocation': workLocation,
       'additionalNotes': additionalNotes,

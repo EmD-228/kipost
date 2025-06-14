@@ -233,7 +233,7 @@ class _WorkManagementScreenState extends State<WorkManagementScreen>
                       ),
                     ),
                     Text(
-                      _formatDateTime(work.scheduledDate, work.scheduledTime),
+                      _formatDateTime(work.scheduledDate!, work.scheduledTime!),
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 14,
@@ -256,7 +256,7 @@ class _WorkManagementScreenState extends State<WorkManagementScreen>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        work.workLocation,
+                        work.workLocation!,
                         style: TextStyle(
                           color: Colors.grey.shade800,
                           fontWeight: FontWeight.w600,

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:kipost/models/proposal.dart';
+import '../utils/app_status.dart';
 
 class ProposalCard extends StatelessWidget {
   final Proposal proposal;
@@ -15,8 +16,8 @@ class ProposalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAccepted = proposal.status == 'acceptée';
-    final isRejected = proposal.status == 'refusée';
+    final isAccepted = proposal.status == ProposalStatus.accepted;
+    final isRejected = proposal.status == ProposalStatus.rejected;
 
     return GestureDetector(
       onTap: onTap,
@@ -164,12 +165,12 @@ class ProposalCard extends StatelessWidget {
     IconData icon;
 
     switch (status) {
-      case 'acceptée':
+      case ProposalStatus.accepted:
         color = Colors.green;
         label = 'Acceptée';
         icon = Iconsax.tick_circle;
         break;
-      case 'refusée':
+      case ProposalStatus.rejected:
         color = Colors.red;
         label = 'Refusée';
         icon = Iconsax.close_circle;

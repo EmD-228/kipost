@@ -6,6 +6,7 @@ import 'package:kipost/models/proposal.dart';
 import 'package:kipost/models/announcement.dart';
 import 'package:kipost/models/tab_config.dart';
 import 'package:kipost/components/home/tab_header.dart';
+import 'package:kipost/utils/app_status.dart';
 
 class ProposalsTab extends StatefulWidget {
   const ProposalsTab({super.key});
@@ -14,12 +15,13 @@ class ProposalsTab extends StatefulWidget {
   State<ProposalsTab> createState() => _ProposalsTabState();
 }
 
-class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClientMixin {
+class _ProposalsTabState extends State<ProposalsTab>
+    with AutomaticKeepAliveClientMixin {
   final ProposalController proposalController = Get.put(ProposalController());
-  
+
   @override
   bool get wantKeepAlive => true;
-  
+
   // Clés pour forcer le rafraîchissement
   int _sentProposalsKey = 0;
   int _receivedProposalsKey = 0;
@@ -27,14 +29,8 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
   // Configuration des onglets de propositions
   List<TabConfig> _getProposalTabs() {
     return [
-      TabConfig(
-        icon: Iconsax.send_1,
-        label: 'Envoyées',
-      ),
-      TabConfig(
-        icon: Iconsax.receive_square,
-        label: 'Reçues',
-      ),
+      TabConfig(icon: Iconsax.send_1, label: 'Envoyées'),
+      TabConfig(icon: Iconsax.receive_square, label: 'Reçues'),
     ];
   }
 
@@ -42,7 +38,7 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
     print('🔍 DEBUG: ProposalsTab build called');
-    
+
     return DefaultTabController(
       length: 2,
       child: Column(
@@ -73,7 +69,8 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
       debugPrefix: 'SentProposals',
       emptyIcon: Iconsax.send_1,
       emptyTitle: 'Aucune proposition envoyée',
-      emptyDescription: 'Vous n\'avez envoyé aucune proposition\npour le moment. Explorez les annonces\net proposez vos services !',
+      emptyDescription:
+          'Vous n\'avez envoyé aucune proposition\npour le moment. Explorez les annonces\net proposez vos services !',
       emptyButtonText: 'Voir les annonces',
       onEmptyPressed: () {
         // Retour à l'onglet Jobs
@@ -100,7 +97,8 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
       debugPrefix: 'ReceivedProposals',
       emptyIcon: Iconsax.receive_square,
       emptyTitle: 'Aucune proposition reçue',
-      emptyDescription: 'Vous n\'avez reçu aucune proposition\npour vos annonces. Créez une annonce\npour recevoir des propositions !',
+      emptyDescription:
+          'Vous n\'avez reçu aucune proposition\npour vos annonces. Créez une annonce\npour recevoir des propositions !',
       emptyButtonText: 'Créer une annonce',
       onEmptyPressed: () => Get.toNamed('/create-announcement'),
       onProposalTap: (proposal) {
@@ -131,25 +129,23 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
       key: ValueKey(key),
       future: future,
       builder: (context, snapshot) {
-        print('🔍 DEBUG: $debugPrefix FutureBuilder - ConnectionState: ${snapshot.connectionState}');
-        
+        print(
+          '🔍 DEBUG: $debugPrefix FutureBuilder - ConnectionState: ${snapshot.connectionState}',
+        );
+
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
-        
+
         if (snapshot.hasError) {
-          print('🔍 DEBUG: $debugPrefix FutureBuilder error: ${snapshot.error}');
+          print(
+            '🔍 DEBUG: $debugPrefix FutureBuilder error: ${snapshot.error}',
+          );
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Iconsax.warning_2,
-                  size: 64,
-                  color: Colors.red.shade300,
-                ),
+                Icon(Iconsax.warning_2, size: 64, color: Colors.red.shade300),
                 const SizedBox(height: 16),
                 Text(
                   'Erreur de chargement',
@@ -162,10 +158,7 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
                 const SizedBox(height: 8),
                 Text(
                   'Impossible de charger les propositions',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
@@ -176,10 +169,12 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
             ),
           );
         }
-        
+
         final proposals = snapshot.data ?? [];
-        print('🔍 DEBUG: $debugPrefix - Received ${proposals.length} proposals');
-        
+        print(
+          '🔍 DEBUG: $debugPrefix - Received ${proposals.length} proposals',
+        );
+
         if (proposals.isEmpty) {
           return Center(
             child: Padding(
@@ -187,11 +182,7 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    emptyIcon,
-                    size: 64,
-                    color: Colors.grey.shade300,
-                  ),
+                  Icon(emptyIcon, size: 64, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
                   Text(
                     emptyTitle,
@@ -205,10 +196,7 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
                   const SizedBox(height: 8),
                   Text(
                     emptyDescription,
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
@@ -219,7 +207,10 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -227,7 +218,7 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
             ),
           );
         }
-        
+
         return RefreshIndicator(
           onRefresh: () async {
             onRefresh();
@@ -249,12 +240,17 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
   }
 
   // Card pour les propositions réelles
-  Widget _buildRealProposalCard(Proposal proposal, void Function(Proposal) onTap) {
+  Widget _buildRealProposalCard(
+    Proposal proposal,
+    void Function(Proposal) onTap,
+  ) {
     return FutureBuilder<Announcement?>(
-      future: proposalController.getAnnouncementForProposal(proposal.announcementId),
+      future: proposalController.getAnnouncementForProposal(
+        proposal.announcementId,
+      ),
       builder: (context, announcementSnapshot) {
         final announcement = announcementSnapshot.data;
-        
+
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
@@ -285,8 +281,10 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
                           radius: 20,
                           backgroundColor: Colors.blue.shade100,
                           child: Text(
-                            proposal.userEmail.isNotEmpty 
-                                ? proposal.userEmail.substring(0, 1).toUpperCase()
+                            proposal.userEmail.isNotEmpty
+                                ? proposal.userEmail
+                                    .substring(0, 1)
+                                    .toUpperCase()
                                 : 'U',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -319,9 +317,9 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
                         _buildStatusBadge(proposal.status),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     // Titre du projet ou ID de l'annonce
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -339,7 +337,8 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              announcement?.title ?? 'Annonce ID: ${proposal.announcementId.substring(0, 8)}...',
+                              announcement?.title ??
+                                  'Annonce ID: ${proposal.announcementId.substring(0, 8)}...',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 14,
@@ -349,9 +348,9 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     // Message de la proposition
                     Text(
                       proposal.message,
@@ -363,15 +362,18 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     // Footer avec infos
                     Row(
                       children: [
                         if (announcement?.category != null) ...[
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.blue.shade50,
                               borderRadius: BorderRadius.circular(6),
@@ -445,7 +447,7 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inMinutes < 60) {
       return 'Il y a ${difference.inMinutes} min';
     } else if (difference.inHours < 24) {
@@ -463,25 +465,24 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
     Color textColor;
     String label;
     IconData icon;
-
     switch (status) {
-      case 'acceptée':
+      case ProposalStatus.accepted:
         backgroundColor = Colors.green.shade50;
         textColor = Colors.green.shade700;
-        label = 'Acceptée';
+        label = ProposalStatus.getLabel(status);
         icon = Iconsax.tick_circle;
         break;
-      case 'refusée':
+      case ProposalStatus.rejected:
         backgroundColor = Colors.red.shade50;
         textColor = Colors.red.shade700;
-        label = 'Refusée';
+        label = ProposalStatus.getLabel(status);
         icon = Iconsax.close_circle;
         break;
-      case 'en_attente':
+      case ProposalStatus.pending:
       default:
         backgroundColor = Colors.orange.shade50;
         textColor = Colors.orange.shade700;
-        label = 'En attente';
+        label = ProposalStatus.getLabel(status);
         icon = Iconsax.clock;
     }
 
@@ -494,11 +495,7 @@ class _ProposalsTabState extends State<ProposalsTab> with AutomaticKeepAliveClie
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 12,
-            color: textColor,
-          ),
+          Icon(icon, size: 12, color: textColor),
           const SizedBox(width: 4),
           Text(
             label,
