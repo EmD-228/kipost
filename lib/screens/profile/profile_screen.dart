@@ -21,7 +21,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final AuthController _authController = Get.find<AuthController>();
   
   bool _isLoading = false;
-  bool _isEditing = false;
   UserModel? _currentUser;
 
   @override
@@ -57,17 +56,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _updateProfile() async {
     if (!_formKey.currentState!.validate()) return;
     
-    // Vérifier qu'au moins un rôle est sélectionné
-    if (_currentUser != null && !_currentUser!.isClient && !_currentUser!.isProvider) {
-      Get.snackbar(
-        'Erreur',
-        'Vous devez sélectionner au moins un rôle',
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.black,
-      );
-      return;
-    }
-    
     setState(() => _isLoading = true);
     
     try {
@@ -82,9 +70,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         
         setState(() {
           _currentUser = updatedUser;
-          _isEditing = false;
         });
         
+        Get.back(result: true); // Retourner avec succès
         Get.snackbar(
           'Succès',
           'Profil mis à jour avec succès',
@@ -124,19 +112,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onPressed: () => Get.back(),
         ),
         title: const Text(
-          'Mon Profil',
+          'Modifier le profil',
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w600,
           ),
         ),
-        actions: [
-          if (!_isEditing)
-            IconButton(
-              icon: const Icon(Iconsax.edit, color: Colors.deepPurple),
-              onPressed: () => setState(() => _isEditing = true),
-            ),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -199,45 +180,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 color: Colors.grey.shade600,
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (_currentUser!.isClient) 
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    margin: const EdgeInsets.only(right: 8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue.shade50,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      'Client',
-                                      style: TextStyle(
-                                        color: Colors.blue.shade700,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                if (_currentUser!.isProvider)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green.shade50,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      'Prestataire',
-                                      style: TextStyle(
-                                        color: Colors.green.shade700,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
                           ],
                         ],
                       ),
@@ -277,7 +219,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             controller: _nameController,
                             label: 'Nom complet',
                             icon: Iconsax.user,
-                            readOnly: !_isEditing,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Veuillez saisir votre nom';
@@ -292,7 +233,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             controller: _phoneController,
                             label: 'Téléphone (optionnel)',
                             icon: Iconsax.call,
-                            readOnly: !_isEditing,
                             keyboardType: TextInputType.phone,
                           ),
                           
@@ -302,131 +242,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             controller: _locationController,
                             label: 'Localisation (optionnel)',
                             icon: Iconsax.location,
-                            readOnly: !_isEditing,
                           ),
-                          
-                          const SizedBox(height: 20),
-                          
-                          // Role management section (only in edit mode)
-                          if (_isEditing) ...[
-                            Text(
-                              'Mes rôles',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade200),
-                              ),
-                              child: Column(
-                                children: [
-                                  CheckboxListTile(
-                                    title: const Text('Client'),
-                                    subtitle: const Text('Poster des annonces'),
-                                    value: _currentUser?.isClient ?? false,
-                                    onChanged: (value) {
-                                      if (_currentUser != null) {
-                                        setState(() {
-                                          _currentUser = _currentUser!.copyWith(
-                                            isClient: value ?? false,
-                                          );
-                                        });
-                                      }
-                                    },
-                                    activeColor: Colors.deepPurple,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  CheckboxListTile(
-                                    title: const Text('Prestataire'),
-                                    subtitle: const Text('Répondre aux annonces'),
-                                    value: _currentUser?.isProvider ?? false,
-                                    onChanged: (value) {
-                                      if (_currentUser != null) {
-                                        setState(() {
-                                          _currentUser = _currentUser!.copyWith(
-                                            isProvider: value ?? false,
-                                          );
-                                        });
-                                      }
-                                    },
-                                    activeColor: Colors.deepPurple,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                          ],
                           
                           const SizedBox(height: 24),
                           
-                          if (_isEditing) ...[
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: () {
-                                      setState(() => _isEditing = false);
-                                      _loadUserProfile(); // Reset form
-                                    },
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                      side: BorderSide(color: Colors.grey.shade400),
-                                    ),
-                                    child: const Text('Annuler'),
+                          // Action Buttons
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () {
+                                    Get.back(); // Annuler sans sauvegarder
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    side: BorderSide(color: Colors.grey.shade400),
                                   ),
+                                  child: const Text('Annuler'),
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: KipostButton(
-                                    label: 'Sauvegarder',
-                                    onPressed: _updateProfile,
-                                    icon: Iconsax.tick_circle,
-                                    loading: _isLoading,
-                                  ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: KipostButton(
+                                  label: 'Sauvegarder',
+                                  onPressed: _updateProfile,
+                                  icon: Iconsax.tick_circle,
+                                  loading: _isLoading,
                                 ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Logout Button
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                         ],
-                      ),
-                      child: TextButton.icon(
-                        onPressed: () async {
-                          await _authController.logout();
-                        },
-                        icon: const Icon(Iconsax.logout, color: Colors.red),
-                        label: const Text(
-                          'Se déconnecter',
-                          style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
-                        ),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.all(20),
-                        ),
                       ),
                     ),
                   ],

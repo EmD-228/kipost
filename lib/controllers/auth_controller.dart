@@ -42,9 +42,7 @@ class AuthController extends GetxController {
         id: userCredential.user!.uid,
         name: name,
         email: email,
-        isClient: isClient,
-        isProvider: isProvider,
-        createdAt: DateTime.now(),
+       createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
       

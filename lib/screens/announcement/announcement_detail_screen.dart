@@ -47,67 +47,24 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         final ann = snapshot.data!;
 
         return Scaffold(
+          appBar: AppBar(
+            title: const Text(
+              'Détails de l\'annonce',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+              ),
+            ),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Iconsax.arrow_left, color: Colors.black),
+              onPressed: () => Get.back(),
+            ),
+          ),
           body: CustomScrollView(
             slivers: [
-              // AppBar moderne avec dégradé
-              SliverAppBar(
-                expandedHeight: 120,
-                floating: false,
-                pinned: true,
-                elevation: 0,
-                flexibleSpace: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.deepPurple,
-                        Colors.deepPurple.shade300,
-                        Colors.blue.shade400,
-                      ],
-                    ),
-                  ),
-                  child: FlexibleSpaceBar(
-                    title: const Text(
-                      'Détails de l\'annonce',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
-                      ),
-                    ),
-                    centerTitle: true,
-                    background: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.deepPurple.withOpacity(0.8),
-                            Colors.deepPurple.shade300.withOpacity(0.8),
-                            Colors.blue.shade400.withOpacity(0.8),
-                          ],
-                        ),
-                      ),
-                      child: const Center(
-                        child: Hero(
-                          tag: 'announcement_hero',
-                          child: Icon(
-                            Iconsax.document_text,
-                            color: Colors.white,
-                            size: 40,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                leading: IconButton(
-                  icon: const Icon(Iconsax.arrow_left, color: Colors.white),
-                  onPressed: () => Get.back(),
-                ),
-              ),
-
               // Contenu principal
               SliverToBoxAdapter(
                 child: Container(
@@ -162,7 +119,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         children: [
           // Titre principal
           Text(
-            ann.title,
+            ann.title.capitalizeFirst!,
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
@@ -360,7 +317,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            ann.description,
+            ann.description.capitalizeFirst!,
             style: const TextStyle(
               fontSize: 15,
               height: 1.6,
@@ -464,7 +421,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
             ),
           ),
         ),
-         if (ann.status == 'ouverte')   const SizedBox(height: 16),
+         /* if (ann.status == 'ouverte') */   const SizedBox(height: 16),
 
         
           Container(

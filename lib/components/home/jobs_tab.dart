@@ -35,15 +35,21 @@ class _JobsTabState extends State<JobsTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 200.0,
+            backgroundColor: Colors.grey.shade50,
+
+            expandedHeight: 145.0,
             floating: false,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               background: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 5,
+                ),
                 child: Column(
                   children: [
                     custom.SearchBar(
@@ -54,7 +60,7 @@ class _JobsTabState extends State<JobsTab> {
                         });
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
                     HorizontalFilters(
                       categories: _categories.map((cat) => cat.name).toList(),
                       selectedCategory:

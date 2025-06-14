@@ -2,14 +2,50 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:kipost/controllers/auth_controller.dart';
+import 'package:kipost/models/user.dart';
 import 'package:kipost/app_route.dart';
 
-class ProfileTab extends StatelessWidget {
+class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
 
   @override
+  State<ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<ProfileTab> {
+  final authController = Get.find<AuthController>();
+  UserModel? currentUser;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final user = await authController.getCurrentUserProfile();
+      if (mounted) {
+        setState(() {
+          currentUser = user;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final authController = Get.find<AuthController>();
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     return SingleChildScrollView(
       child: Padding(
@@ -44,35 +80,48 @@ class ProfileTab extends StatelessWidget {
                       ),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
-                      Iconsax.user,
-                      color: Colors.white,
-                      size: 40,
-                    ),
+                    child: currentUser?.avatar != null
+                        ? ClipOval(
+                            child: Image.network(
+                              currentUser!.avatar!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(
+                                  Iconsax.user,
+                                  color: Colors.white,
+                                  size: 40,
+                                );
+                              },
+                            ),
+                          )
+                        : const Icon(
+                            Iconsax.user,
+                            color: Colors.white,
+                            size: 40,
+                          ),
                   ),
                   const SizedBox(height: 16),
                   // Nom et email
-                  Obx(
-                    () => Column(
-                      children: [
-                        Text(
-                          'Utilisateur',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
+                  Column(
+                    children: [
+                      Text(
+                        currentUser?.name ?? 'Utilisateur',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          authController.firebaseUser.value?.email ?? '',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        currentUser?.email ?? authController.firebaseUser.value?.email ?? '',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                   ),
                   const SizedBox(height: 20),
                   // Statistiques
@@ -80,19 +129,19 @@ class ProfileTab extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       _buildStatCard(
-                        '12',
+                        '0', // TODO: Compter les vraies annonces
                         'Annonces',
                         Iconsax.briefcase,
                         Colors.blue,
                       ),
                       _buildStatCard(
-                        '8',
+                        '0', // TODO: Compter les propositions
                         'Propositions',
                         Iconsax.note_2,
                         Colors.green,
                       ),
                       _buildStatCard(
-                        '3',
+                        '0', // TODO: Compter les travaux en cours
                         'En cours',
                         Iconsax.clock,
                         Colors.orange,
@@ -187,8 +236,20 @@ class ProfileTab extends StatelessWidget {
             icon: Iconsax.edit,
             title: 'Modifier le profil',
             subtitle: 'Nom, photo, informations personnelles',
+            onTap: () async {
+              final result = await Get.toNamed(AppRoutes.profile);
+              // Recharger le profil si des modifications ont été apportées
+              if (result == true) {
+                _loadUserProfile();
+              }
+            },
+          ),
+          _buildMenuItem(
+            icon: Iconsax.briefcase,
+            title: 'Mes annonces',
+            subtitle: 'Voir et gérer mes annonces publiées',
             onTap: () {
-              Get.toNamed(AppRoutes.profile);
+              // Get.toNamed(AppRoutes.myAnnouncements);
             },
           ),
           _buildMenuItem(

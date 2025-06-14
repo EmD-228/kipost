@@ -204,4 +204,41 @@ class WorkController extends GetxController {
       );
     }
   }
+
+  // Créer un nouveau work_details et retourner l'ID du document
+  Future<String?> createWorkDetails({
+    required String proposalId,
+    required String announcementId,
+    required String clientId,
+    required String providerId,
+    required DateTime scheduledDate,
+    required String scheduledTime,
+    required String workLocation,
+    String? additionalNotes,
+  }) async {
+    try {
+      final workDetails = WorkDetails(
+        id: '',
+        proposalId: proposalId,
+        announcementId: announcementId,
+        clientId: clientId,
+        providerId: providerId,
+        scheduledDate: scheduledDate,
+        scheduledTime: scheduledTime,
+        workLocation: workLocation,
+        additionalNotes: additionalNotes,
+        status: 'planned',
+        createdAt: DateTime.now(),
+      );
+
+      final docRef = await FirebaseFirestore.instance
+          .collection('work_details')
+          .add(workDetails.toMap());
+
+      return docRef.id;
+    } catch (e) {
+      print('Erreur lors de la création du work_details : $e');
+      return null;
+    }
+  }
 }

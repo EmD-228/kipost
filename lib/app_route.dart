@@ -6,8 +6,6 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/announcement/create_announcement_simple.dart';
-// import 'screens/announcement/my_announcements_screen.dart';
-// import 'screens/announcement/announcement_list_screen.dart';
 import 'screens/announcement/announcement_detail_screen.dart';
 import 'screens/announcement/proposals_screen.dart';
 import 'screens/proposal/proposal_detail_screen.dart';
@@ -25,8 +23,6 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String profile = '/profile';
   static const String createAnnouncement = '/create-announcement';
-  // static const String myAnnouncements = '/my-announcements';
-  static const String announcementList = '/announcement-list';
   static const String announcementDetail = '/announcement-detail';
   static const String proposals = '/proposals';
   static const String proposalDetail = '/proposal-detail';
@@ -43,7 +39,6 @@ class AppRoutes {
     GetPage(name: forgotPassword, page: () => const ForgotPasswordScreen()),
     GetPage(name: profile, page: () => const ProfileScreen()),
     GetPage(name: createAnnouncement, page: () => const CreateAnnouncementSimpleScreen()),
-    // GetPage(name: announcementList, page: () => AnnouncementListScreen()),
     GetPage(name: announcementDetail, page: () => const AnnouncementDetailScreen()),
     GetPage(name: proposals, page: () => const ProposalsScreen()),
     GetPage(name: proposalDetail, page: () => ProposalDetailScreen(proposal: Get.arguments)),
