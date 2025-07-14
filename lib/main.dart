@@ -10,6 +10,7 @@ import 'package:kipost/controllers/notification_controller.dart';
 import 'package:kipost/controllers/work_controller.dart';
 import 'package:kipost/firebase_options.dart';
 import 'package:kipost/screens/auth/auth_screen.dart';
+import 'package:kipost/theme/app_theme.dart';
 import 'controllers/auth_controller.dart';
 
 void main() async {
@@ -49,9 +50,9 @@ class MyApp extends StatelessWidget {
         Locale('fr', 'FR'),
         Locale('en', 'US'),
       ],
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       getPages: AppRoutes.routes,
       // Page d'accueil initiale - AuthController se charge de la navigation
       home: const AuthScreen(),

@@ -6,8 +6,10 @@ import 'package:kipost/components/home/proposals_tab.dart';
 import 'package:kipost/components/home/profile_tab.dart';
 import 'package:kipost/components/home/feature_tabs.dart';
 import 'package:kipost/components/home/nav_icon.dart';
+import 'package:kipost/components/text/app_text.dart';
 import 'package:kipost/controllers/notification_controller.dart';
 import 'package:kipost/app_route.dart';
+import 'package:kipost/theme/app_colors.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -52,24 +54,19 @@ class _MyHomePageState extends State<MyHomePage> {
         toolbarHeight: 70,
         title: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.deepPurple, Colors.deepPurple.shade300],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                "_Kipost",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  letterSpacing: 0.5,
-                ),
+            AppText.heading1(
+              "kipost",
+              color: AppColors.primary,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+            ),
+            const Text(
+              "kipost",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                letterSpacing: 0.5,
               ),
             ),
             const Spacer(),
