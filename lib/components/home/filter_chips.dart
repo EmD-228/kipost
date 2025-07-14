@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kipost/theme/app_colors.dart';
 
 class FilterChipWidget extends StatelessWidget {
   final String label;
@@ -63,7 +64,7 @@ class HorizontalFilters extends StatelessWidget {
       items: categories,
       selectedItem: selectedCategory,
       onItemSelected: onCategoryChanged,
-      color: Colors.deepPurple,
+      color:AppColors.secondary,
     );
   }
 

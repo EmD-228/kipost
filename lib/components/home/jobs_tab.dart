@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:get/get.dart';
+import 'package:kipost/components/text/app_text.dart';
 import 'package:kipost/models/announcement.dart';
 import 'package:kipost/models/category.dart';
 import 'package:kipost/components/home/search_bar.dart' as custom;
@@ -166,7 +167,7 @@ class _JobsTabState extends State<JobsTab> {
                 delegate: SliverChildBuilderDelegate((context, index) {
                   return Padding(
                     padding: EdgeInsets.only(
-                      bottom: index == announcements.length - 1 ? 100 : 16,
+                      bottom: index == announcements.length - 1 ? 100 : 0.2,
                     ),
                     child: _buildAnnouncementCard(announcements[index]),
                   );
@@ -280,30 +281,12 @@ class _JobsTabState extends State<JobsTab> {
               const SizedBox(height: 12),
 
               // Titre
-              Text(
-                announcement.title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+              AppText.heading3(announcement.title.capitalizeFirst!),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 5),
 
               // Description
-              Text(
-                announcement.description,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                  height: 1.4,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+              AppText.bodySmall(announcement.description.capitalizeFirst!),
 
               const SizedBox(height: 12),
 

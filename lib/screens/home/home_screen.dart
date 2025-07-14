@@ -46,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     backgroundColor: const Color(0xFFF8F9FF),
+      backgroundColor: const Color(0xFFF8F9FF),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -60,21 +60,13 @@ class _MyHomePageState extends State<MyHomePage> {
               textAlign: TextAlign.center,
               maxLines: 1,
             ),
-            const Text(
-              "kipost",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                letterSpacing: 0.5,
-              ),
-            ),
+
             const Spacer(),
             // Icône de notification avec compteur
             Obx(() {
               final notificationController = Get.find<NotificationController>();
               final unreadCount = notificationController.unreadCount;
-              
+
               return GestureDetector(
                 onTap: () => Get.toNamed(AppRoutes.notifications),
                 child: Badge(
@@ -91,20 +83,18 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.deepPurple.shade50,
+                      color: AppColors.primaryContainer,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Iconsax.notification,
-                      color: Colors.deepPurple,
+                      color: AppColors.onPrimaryContainer,
                       size: 24,
                     ),
                   ),
                 ),
               );
             }),
-         
-
           ],
         ),
       ),
@@ -113,11 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
           _selectedIndex == 0
               ? Container(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.deepPurple, Colors.deepPurple.shade300],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color:AppColors.primary,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -185,9 +171,12 @@ class _MyHomePageState extends State<MyHomePage> {
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
-          selectedItemColor: Colors.deepPurple,
+          selectedItemColor:AppColors.primary,
           unselectedItemColor: Colors.grey.shade400,
           showUnselectedLabels: true,
+          selectedIconTheme: Get.theme.iconTheme.copyWith(
+            color: AppColors.primary,
+          ),
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.transparent,
           elevation: 0,
