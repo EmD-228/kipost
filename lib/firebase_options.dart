@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyABXzeE1fVSo55mmLVrWtlL4MeG8ZASspg',
-    appId: '1:355149095134:android:a904db24d8eaea57d2a24f',
+    appId: '1:355149095134:android:2017c31c504fc7a0d2a24f',
     messagingSenderId: '355149095134',
     projectId: 'freelance-efd3a',
     storageBucket: 'freelance-efd3a.firebasestorage.app',
@@ -59,10 +59,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDYRGEq19RdRQewN7-PQuadqbFaYgqusjg',
-    appId: '1:355149095134:ios:b08213832452477cd2a24f',
+    appId: '1:355149095134:ios:198e1ab4378c1e57d2a24f',
     messagingSenderId: '355149095134',
     projectId: 'freelance-efd3a',
     storageBucket: 'freelance-efd3a.firebasestorage.app',
-    iosBundleId: 'com.example.kipost',
+    iosBundleId: 'com.vrai.app.kipost',
   );
+
 }
