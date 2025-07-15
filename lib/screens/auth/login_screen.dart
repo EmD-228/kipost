@@ -5,6 +5,7 @@ import 'package:kipost/components/kipost_button.dart';
 import 'package:kipost/components/kipost_textfield.dart';
 import 'package:kipost/controllers/auth_controller.dart';
 import 'package:kipost/app_route.dart';
+import 'package:kipost/theme/app_colors.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -98,14 +99,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Colors.deepPurple, Colors.deepPurple.shade300],
+                              colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.deepPurple.withOpacity(0.15),
+                                color: AppColors.primary.withOpacity(0.15),
                                 blurRadius: 15,
                                 offset: const Offset(0, 5),
                               ),
@@ -206,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               'Mot de passe oublié ?',
                               style: TextStyle(
-                                color: Colors.deepPurple,
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -220,14 +221,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: double.infinity,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Colors.deepPurple, Colors.deepPurple.shade300],
+                              colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
                               begin: Alignment.centerLeft,
                               end: Alignment.centerRight,
                             ),
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.deepPurple.withOpacity(0.15),
+                                color: AppColors.primary.withOpacity(0.15),
                                 blurRadius: 8,
                                 offset: const Offset(0, 3),
                               ),
@@ -295,14 +296,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Icon(
                             Iconsax.user_add,
-                            color: Colors.deepPurple,
+                            color: AppColors.primary,
                             size: 20,
                           ),
                           const SizedBox(width: 12),
                           Text(
                             "Pas encore de compte ? S'inscrire",
-                            style: const TextStyle(
-                              color: Colors.deepPurple,
+                            style: TextStyle(
+                              color: AppColors.primary,
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
                             ),

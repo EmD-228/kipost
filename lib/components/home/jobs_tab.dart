@@ -228,7 +228,7 @@ class _JobsTabState extends State<JobsTab> {
                           announcement.creatorProfile?.name ??
                               'Utilisateur anonyme',
                           style: const TextStyle(
-                            fontWeight: FontWeight.w600,
+                            // fontWeight: FontWeight.w600,
                             fontSize: 14,
                             color: Color(0xFF1F2937),
                           ),
@@ -281,7 +281,14 @@ class _JobsTabState extends State<JobsTab> {
               const SizedBox(height: 12),
 
               // Titre
-              AppText.heading3(announcement.title.capitalizeFirst!),
+              Text(
+                announcement.title.capitalizeFirst!,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  // color: isOpen ? Colors.green : Colors.red,
+                ),
+              ),
 
               const SizedBox(height: 5),
 

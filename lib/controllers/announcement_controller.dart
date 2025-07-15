@@ -6,6 +6,7 @@ import 'package:kipost/models/announcement.dart';
 import 'package:kipost/models/category.dart';
 import 'package:kipost/models/urgency_level.dart';
 import 'package:kipost/models/user.dart';
+import 'package:kipost/utils/app_status.dart';
 
 class AnnouncementController extends GetxController {
   final RxBool loading = false.obs;
@@ -54,7 +55,7 @@ class AnnouncementController extends GetxController {
         'price': price,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-        'status': 'open',
+        'status': AnnouncementStatus.active,
         'creatorId': user.uid,
         'creatorEmail': user.email,
         'creatorProfile':user.photoURL,
@@ -428,7 +429,7 @@ class AnnouncementController extends GetxController {
   Future<void> closeAnnouncement(String announcementId) async {
     await updateAnnouncement(
       announcementId: announcementId,
-      status: 'closed',
+      status: AnnouncementStatus.cancelled,
     );
   }
 
@@ -436,7 +437,7 @@ class AnnouncementController extends GetxController {
   Future<void> reopenAnnouncement(String announcementId) async {
     await updateAnnouncement(
       announcementId: announcementId,
-      status: 'open',
+      status: AnnouncementStatus.active,
     );
   }
 

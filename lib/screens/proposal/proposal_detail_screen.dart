@@ -2,14 +2,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:kipost/components/kipost_textfield.dart';
 import 'package:kipost/models/proposal.dart';
 import 'package:kipost/models/announcement.dart';
 import 'package:kipost/controllers/proposal_controller.dart';
 import 'package:kipost/controllers/work_controller.dart';
-import 'package:kipost/components/kipost_button.dart';
 import 'package:kipost/models/work_details.dart';
 import 'package:kipost/utils/app_status.dart';
+import 'package:kipost/utils/map_utils.dart';
+import 'package:kipost/components/proposal/proposal_card.dart';
+import 'package:kipost/components/proposal/announcement_card.dart';
+import 'package:kipost/components/proposal/message_card.dart';
+import 'package:kipost/components/proposal/schedule_card.dart';
+import 'package:kipost/components/proposal/planned_work_card.dart';
+import 'package:kipost/components/proposal/action_buttons_section.dart';
+import 'package:kipost/components/proposal/sender_actions_card.dart';
 
 class ProposalDetailScreen extends StatefulWidget {
   final Proposal proposal;
@@ -151,583 +157,100 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildProposalCard(),
+                ProposalCard(
+                  proposal: currentProposal,
+                  announcementCreatorEmail: _announcement?.creatorEmail,
+                  isCurrentUserSender: _isCurrentUserSender,
+                ),
                 const SizedBox(height: 20),
-                _buildAnnouncementCard(),
+                AnnouncementCard(
+                  announcement: _announcement,
+                  isLoading: _loadingAnnouncement,
+                  announcementId: currentProposal.announcementId,
+                ),
                 const SizedBox(height: 20),
-                _buildMessageCard(),
+                MessageCard(message: currentProposal.message),
                 const SizedBox(height: 20),
                 if (currentProposal.status == 'pending' &&
                     _isCurrentUserReceiver)
-                  _buildActionsButtons(),
+                  ActionButtonsSection(
+                    proposal: currentProposal,
+                    onAccept: () => _updateProposalStatus(ProposalStatus.accepted),
+                    onReject: () => _updateProposalStatus(ProposalStatus.rejected),
+                    onContact: () {
+                      // TODO: Implement contact functionality
+                    },
+                  ),
+                if (currentProposal.status == 'pending' &&
+                    _isCurrentUserSender)
+                  _buildSenderPendingActions(),
                 if (currentProposal.status == 'accepted' &&
                     currentProposal.workDetailId.isEmpty &&
                     _isCurrentUserReceiver)
-                  _buildScheduleCard(),
+                  ScheduleCard(
+                    showScheduleForm: _showScheduleForm,
+                    onPlanifyPressed: () {
+                      setState(() {
+                        _showScheduleForm = true;
+                      });
+                    },
+                    onScheduleWork: _scheduleWork,
+                    onCancel: () {
+                      setState(() {
+                        _showScheduleForm = false;
+                      });
+                    },
+                    formKey: _formKey,
+                    locationController: _locationController,
+                    notesController: _notesController,
+                    selectedDate: _selectedDate,
+                    selectedTime: _selectedTime,
+                    onSelectDate: _selectDate,
+                    onSelectTime: _selectTime,
+                  ),
                 if (currentProposal.status == 'accepted' &&
                     currentProposal.workDetailId.isNotEmpty &&
                     _isCurrentUserReceiver)
-                  _buildPlannedWorkCard(),
+                  PlannedWorkCard(proposal: currentProposal),
+                if (currentProposal.status == 'accepted' &&
+                    currentProposal.workDetailId.isNotEmpty &&
+                    _isCurrentUserSender)
+                  SenderActionsCard(
+                    onCalendarPressed: () {
+                      // TODO: Navigate to calendar
+                    },
+                    onChatPressed: () {
+                      // TODO: Navigate to chat
+                    },
+                    onLocationPressed: () async {
+                      try {
+                        if (currentWorkDetails.workLocation != null && 
+                            currentWorkDetails.workLocation!.isNotEmpty) {
+                          // Si on a une adresse textuelle, on l'utilise
+                          await MapUtils.openGoogleMapsWithAddress(currentWorkDetails.workLocation!);
+                        } else {
+                          Get.snackbar(
+                            'Information',
+                            'Aucune localisation disponible',
+                            backgroundColor: Colors.orange.shade100,
+                            colorText: Colors.black,
+                          );
+                        }
+                      } catch (e) {
+                        Get.snackbar(
+                          'Erreur',
+                          'Impossible d\'ouvrir la carte : $e',
+                          backgroundColor: Colors.red.shade100,
+                          colorText: Colors.black,
+                        );
+                      }
+                    },
+                  ),
                 // const SizedBox(height: 100),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildActionsButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () {
-              _updateProposalStatus(ProposalStatus.rejected);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-
-            child: Text("rejected"),
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () async {
-              _updateProposalStatus(ProposalStatus.accepted);
-              /*  await _workController
-                  .createWorkDetails(
-                    proposalId: currentProposal.id,
-                    announcementId: currentProposal.announcementId,
-                    clientId: _announcement?.creatorId ?? 'unknown',
-                    providerId: currentProposal.userId,
-                  )
-                  .then((id) {
-                    // Update the proposal status to 'acceptée'
-                  }); */
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-
-            child: Text("Accepter"),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProposalCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 25,
-                backgroundColor: Colors.deepPurple.shade100,
-                child: Text(
-                  currentProposal.userEmail.isNotEmpty
-                      ? currentProposal.userEmail.substring(0, 1).toUpperCase()
-                      : 'U',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.deepPurple.shade700,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      currentProposal.userEmail,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Proposition • ${_formatDate(currentProposal.createdAt)}',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _buildStatusBadge(currentProposal.status),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAnnouncementCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Iconsax.briefcase, color: Colors.deepPurple, size: 24),
-              const SizedBox(width: 12),
-              Text(
-                'Annonce concernée',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                  color: Colors.deepPurple,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (_loadingAnnouncement)
-            const Center(child: CircularProgressIndicator())
-          else if (_announcement != null) ...[
-            Text(
-              _announcement!.title,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _announcement!.category.icon,
-                        size: 16,
-                        color: Colors.blue.shade700,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _announcement!.category.name,
-                        style: TextStyle(
-                          color: Colors.blue.shade700,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                if (_announcement!.price != null) ...[
-                  Icon(Iconsax.money, size: 16, color: Colors.green.shade600),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${_announcement!.price} FCFA',
-                    style: TextStyle(
-                      color: Colors.green.shade600,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Iconsax.location, size: 16, color: Colors.grey.shade600),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    _announcement!.location,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                  ),
-                ),
-              ],
-            ),
-          ] else ...[
-            Text(
-              'Annonce ID: ${currentProposal.announcementId}',
-              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Impossible de charger les détails de l\'annonce',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Iconsax.message_text, color: Colors.deepPurple, size: 24),
-              const SizedBox(width: 12),
-              Text(
-                'Message de proposition',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                  color: Colors.deepPurple,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Text(
-              currentProposal.message,
-              style: const TextStyle(fontSize: 15, height: 1.5),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildScheduleCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Iconsax.calendar, color: Colors.green.shade600, size: 24),
-              const SizedBox(width: 12),
-              Text(
-                'Planification du travail',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                  color: Colors.green.shade600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (!_showScheduleForm) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.shade200),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Iconsax.tick_circle,
-                    color: Colors.green.shade600,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Proposition acceptée !',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                      color: Colors.green.shade700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Planifiez maintenant le travail avec le proposant',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.green.shade600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  KipostButton(
-                    label: 'Planifier le travail',
-                    onPressed: () {
-                      setState(() {
-                        _showScheduleForm = true;
-                      });
-                    },
-                    icon: Iconsax.calendar_add,
-                  ),
-                ],
-              ),
-            ),
-          ] else ...[
-            _buildScheduleForm(),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildScheduleForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Informations de planification',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-              color: Colors.grey.shade700,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Date selection
-          GestureDetector(
-            onTap: _selectDate,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(Iconsax.calendar, color: Colors.deepPurple),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _selectedDate != null
-                          ? _formatDate(_selectedDate!)
-                          : 'Sélectionner une date',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color:
-                            _selectedDate != null
-                                ? Colors.black
-                                : Colors.grey.shade600,
-                      ),
-                    ),
-                  ),
-                  Icon(Iconsax.arrow_down_1, color: Colors.grey.shade400),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Time selection
-          GestureDetector(
-            onTap: _selectTime,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(Iconsax.clock, color: Colors.deepPurple),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _selectedTime != null
-                          ? _formatTime(_selectedTime!)
-                          : 'Sélectionner une heure',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color:
-                            _selectedTime != null
-                                ? Colors.black
-                                : Colors.grey.shade600,
-                      ),
-                    ),
-                  ),
-                  Icon(Iconsax.arrow_down_1, color: Colors.grey.shade400),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Location
-          KipostTextField(
-            controller: _locationController,
-            label: 'Lieu de rendez-vous',
-            icon: Iconsax.location,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Veuillez entrer un lieu de rendez-vous';
-              }
-              return null;
-            },
-          ),
-
-          const SizedBox(height: 16),
-
-          // Notes
-          KipostTextField(
-            controller: _notesController,
-            label: 'Notes supplémentaires (optionnel)',
-            icon: Iconsax.note,
-            maxLines: 3,
-          ),
-
-          const SizedBox(height: 24),
-
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    setState(() {
-                      _showScheduleForm = false;
-                    });
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: Colors.grey.shade400),
-                  ),
-                  child: const Text('Annuler'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: KipostButton(
-                  label: 'Planifier',
-                  onPressed: _scheduleWork,
-                  icon: Iconsax.calendar_tick,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(String status) {
-    Color backgroundColor;
-    Color textColor;
-    String label;
-    IconData icon;
-
-    switch (status) {
-      case ProposalStatus.accepted:
-        backgroundColor = Colors.green.shade50;
-        textColor = Colors.green.shade700;
-        label = ProposalStatus.getLabel(status);
-        icon = Iconsax.tick_circle;
-        break;
-      case ProposalStatus.rejected:
-        backgroundColor = Colors.red.shade50;
-        textColor = Colors.red.shade700;
-        label = ProposalStatus.getLabel(status);
-        icon = Iconsax.close_circle;
-        break;
-      case ProposalStatus.pending:
-      default:
-        backgroundColor = Colors.orange.shade50;
-        textColor = Colors.orange.shade700;
-        label = ProposalStatus.getLabel(status);
-        icon = Iconsax.clock;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: textColor),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -786,28 +309,6 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
     }
   }
 
-  String _formatDate(DateTime date) {
-    const months = [
-      'Janvier',
-      'Février',
-      'Mars',
-      'Avril',
-      'Mai',
-      'Juin',
-      'Juillet',
-      'Août',
-      'Septembre',
-      'Octobre',
-      'Novembre',
-      'Décembre',
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
-
-  String _formatTime(TimeOfDay time) {
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-  }
-
   Future<void> _scheduleWork() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedDate == null || _selectedTime == null) {
@@ -861,6 +362,189 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
     }
   }
 
+  Widget _buildSenderPendingActions() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Iconsax.setting_2, color: Colors.blue.shade600, size: 24),
+              const SizedBox(width: 12),
+              Text(
+                'Actions sur ma proposition',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  color: Colors.blue.shade600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.orange.shade200),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Iconsax.clock,
+                  color: Colors.orange.shade600,
+                  size: 48,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Proposition en attente',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Colors.orange.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Votre proposition est en attente de réponse du client.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.orange.shade600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    _showCancelConfirmationDialog();
+                  },
+                  icon: Icon(Iconsax.trash, size: 18),
+                  label: const Text('Annuler'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    side: BorderSide(color: Colors.red.shade300),
+                    foregroundColor: Colors.red.shade600,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    // TODO: Navigate to edit proposal screen
+                    Get.snackbar(
+                      'Information',
+                      'Fonctionnalité de modification à venir',
+                      backgroundColor: Colors.blue.shade100,
+                      colorText: Colors.black,
+                    );
+                  },
+                  icon: const Icon(Iconsax.edit, size: 18),
+                  label: const Text('Modifier'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCancelConfirmationDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: Text(
+          'Annuler la proposition',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.red.shade700,
+          ),
+        ),
+        content: const Text(
+          'Êtes-vous sûr de vouloir annuler cette proposition ? Cette action est irréversible.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text(
+              'Non',
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Get.back(); // Fermer le dialog
+              await _cancelProposal();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade600,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Oui, annuler'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _cancelProposal() async {
+    try {
+      await _proposalController.deleteProposal(currentProposal.id);
+      
+      Get.snackbar(
+        'Succès',
+        'Proposition annulée avec succès',
+        backgroundColor: Colors.green.shade100,
+        colorText: Colors.black,
+      );
+
+      // Retour à la page précédente
+      Get.back();
+    } catch (e) {
+      Get.snackbar(
+        'Erreur',
+        'Erreur lors de l\'annulation : $e',
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.black,
+      );
+    }
+  }
+
   Future<void> _updateProposalStatus(
     String newStatus, {
     String? workDetailId,
@@ -901,242 +585,5 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
         colorText: Colors.black,
       );
     }
-  }
-
-  Widget _buildPlannedWorkCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade600, Colors.blue.shade400],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Iconsax.calendar_tick,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Travail planifié',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Détails de l\'intervention programmée',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'PROGRAMMÉ',
-                  style: TextStyle(
-                    color: Colors.blue.shade700,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Informations de planification
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue.shade200),
-            ),
-            child: Column(
-              children: [
-                // Date
-                _buildPlanningInfoRow(
-                  icon: Iconsax.calendar,
-                  color: Colors.blue.shade600,
-                  label: 'Date',
-                  value: currentWorkDetails.scheduledDate != null
-                      ? _formatDate(currentWorkDetails.scheduledDate!)
-                      : 'À définir',
-                ),
-                const SizedBox(height: 16),
-
-                // Heure
-                _buildPlanningInfoRow(
-                  icon: Iconsax.clock,
-                  color: Colors.orange.shade600,
-                  label: 'Heure',
-                  value: currentWorkDetails.scheduledTime != null && currentWorkDetails.scheduledTime!.isNotEmpty
-                      ? currentWorkDetails.scheduledTime!
-                      : 'À définir',
-                ),
-                const SizedBox(height: 16),
-
-                // Lieu
-                _buildPlanningInfoRow(
-                  icon: Iconsax.location,
-                  color: Colors.green.shade600,
-                  label: 'Lieu',
-                  value: currentWorkDetails.workLocation != null && currentWorkDetails.workLocation!.isNotEmpty
-                      ? currentWorkDetails.workLocation!
-                      : 'À définir',
-                ),
-                const SizedBox(height: 16),
-
-                // Notes additionnelles
-                _buildPlanningInfoRow(
-                  icon: Iconsax.note,
-                  color: Colors.purple.shade600,
-                  label: 'Notes',
-                  value: currentWorkDetails.additionalNotes != null && currentWorkDetails.additionalNotes!.isNotEmpty
-                      ? currentWorkDetails.additionalNotes!
-                      : 'Aucune note',
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Actions
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Naviguer vers les détails du travail ou permettre modification
-                  },
-                  icon: Icon(
-                    Iconsax.edit,
-                    size: 18,
-                    color: Colors.blue.shade600,
-                  ),
-                  label: Text(
-                    'Modifier',
-                    style: TextStyle(color: Colors.blue.shade600),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    side: BorderSide(color: Colors.blue.shade600),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    // TODO: Naviguer vers le calendrier ou l'agenda
-                  },
-                  icon: const Icon(Iconsax.calendar_1, size: 18),
-                  label: const Text('Mon agenda'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade600,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlanningInfoRow({
-    required IconData icon,
-    required Color color,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 16, color: color),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF2D3748),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 }

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'category.dart';
 import 'urgency_level.dart';
 import 'user.dart';
+import '../utils/app_status.dart';
 
 class Announcement {
   final String id;
@@ -46,7 +47,7 @@ class Announcement {
       category: Category.fromMap(map['category'] ?? ''),
       urgencyLevel: UrgencyLevel.fromMap(map['urgencyLevel'] ?? ''),
       location: map['location'] ?? '',
-      status: map['status'] ?? 'open',
+      status: map['status'] ?? AnnouncementStatus.active,
       creatorId: map['creatorId'] ?? '',
       creatorEmail: map['creatorEmail'] ?? '',
       createdAt:
@@ -120,8 +121,11 @@ class Announcement {
   }
 
   // Méthodes utilitaires
-  bool get isOpen => status == 'active' || status == 'ouverte';
-  bool get isClosed => status == 'cancelled' || status == 'fermee';
+  bool get isOpen => status == AnnouncementStatus.active;
+  bool get isClosed => status == AnnouncementStatus.cancelled || 
+                       status == AnnouncementStatus.completed || 
+                       status == AnnouncementStatus.expired;
+  bool get isPaused => status == AnnouncementStatus.paused;
   int get proposalCount => proposalIds.length;
 
   // Créer une annonce avec des données de test
@@ -163,7 +167,7 @@ class Announcement {
       category: category,
       urgencyLevel: urgencyLevel,
       location: location ?? 'Yopougon, Abidjan',
-      status: status ?? 'open',
+      status: status ?? AnnouncementStatus.active,
       creatorId: creatorProfile.id,
       creatorEmail: creatorProfile.email,
       createdAt: createdAt ?? now,

@@ -371,6 +371,44 @@ class ProposalController extends GetxController {
     }
   }
 
+  // Supprimer une proposition
+  Future<void> deleteProposal(String proposalId) async {
+    try {
+      print('🔍 DEBUG: Deleting proposal $proposalId');
+      
+      // Récupérer d'abord les détails de la proposition pour obtenir l'announcementId
+      final proposalDoc = await FirebaseFirestore.instance
+          .collection('proposals')
+          .doc(proposalId)
+          .get();
+      
+      if (!proposalDoc.exists) {
+        throw Exception('Proposition introuvable');
+      }
+      
+      final proposalData = proposalDoc.data()!;
+      final announcementId = proposalData['announcementId'] as String;
+      
+      // Utiliser une transaction pour assurer la cohérence des données
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        // Supprimer la proposition
+        transaction.delete(FirebaseFirestore.instance.collection('proposals').doc(proposalId));
+        
+        // Retirer l'ID de la proposition de l'annonce
+        final announcementRef = FirebaseFirestore.instance.collection('annonces').doc(announcementId);
+        transaction.update(announcementRef, {
+          'proposalIds': FieldValue.arrayRemove([proposalId]),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      });
+      
+      print('🔍 DEBUG: Proposal deleted successfully');
+    } catch (e) {
+      print('🔍 DEBUG: Error deleting proposal: $e');
+      throw e;
+    }
+  }
+
   // Get proposal by ID
   Future<Proposal?> getProposalById(String proposalId) async {
     try {

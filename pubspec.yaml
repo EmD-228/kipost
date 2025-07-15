@@ -43,6 +43,8 @@ dependencies:
   iconsax: ^0.0.8
   table_calendar: ^3.2.0
   intl: ^0.20.2
+  url_launcher: ^6.2.5
+  flutter_launcher_icons: ^0.14.4
   flutter_localizations:
     sdk: flutter
 

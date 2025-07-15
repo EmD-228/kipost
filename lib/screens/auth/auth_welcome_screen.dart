@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:kipost/app_route.dart';
+import 'package:kipost/theme/app_colors.dart';
 
 class AuthWelcomeScreen extends StatelessWidget {
   const AuthWelcomeScreen({super.key});
@@ -16,7 +17,7 @@ class AuthWelcomeScreen extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 80),
-              
+
               // Logo et titre principal
               Expanded(
                 flex: 2,
@@ -27,14 +28,17 @@ class AuthWelcomeScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.deepPurple, Colors.deepPurple.shade300],
+                          colors: [
+                            AppColors.primary,
+                            AppColors.primary.withOpacity(0.7),
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.deepPurple.withOpacity(0.15),
+                            color: AppColors.primary.withOpacity(0.15),
                             blurRadius: 15,
                             offset: const Offset(0, 5),
                           ),
@@ -46,21 +50,23 @@ class AuthWelcomeScreen extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 40),
-                    
+
                     Text(
                       'Bienvenue sur\nKipost',
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      style: Theme.of(
+                        context,
+                      ).textTheme.headlineLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.grey.shade800,
                         height: 1.2,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     Text(
                       'La plateforme qui connecte vos besoins\navec les bonnes personnes',
                       textAlign: TextAlign.center,
@@ -73,7 +79,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // Boutons d'action
               Expanded(
                 flex: 1,
@@ -85,14 +91,14 @@ class AuthWelcomeScreen extends StatelessWidget {
                       height: 56,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.deepPurple, Colors.deepPurple.shade300],
+                          colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
                         ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.deepPurple.withOpacity(0.15),
+                            color: AppColors.primary.withOpacity(0.15),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -139,7 +145,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Colors.deepPurple,
+                          color: AppColors.primary,
                           width: 2,
                         ),
                         boxShadow: [
@@ -164,14 +170,14 @@ class AuthWelcomeScreen extends StatelessWidget {
                           children: [
                             Icon(
                               Iconsax.user_add,
-                              color: Colors.deepPurple,
+                              color: AppColors.primary,
                               size: 24,
                             ),
                             const SizedBox(width: 12),
                             Text(
                               'Créer un compte',
                               style: TextStyle(
-                                color: Colors.deepPurple,
+                                color: AppColors.primary,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -198,21 +204,21 @@ class AuthWelcomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Footer avec informations
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.deepPurple.shade50,
+                  color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Iconsax.security_safe,
-                      color: Colors.deepPurple,
+                      color: AppColors.primary,
                       size: 24,
                     ),
                     const SizedBox(width: 12),
@@ -220,7 +226,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                       child: Text(
                         'Vos données sont sécurisées et protégées',
                         style: TextStyle(
-                          color: Colors.deepPurple.shade700,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -228,7 +234,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 40),
             ],
           ),
