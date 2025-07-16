@@ -45,6 +45,9 @@ dependencies:
   intl: ^0.20.2
   url_launcher: ^6.2.5
   flutter_launcher_icons: ^0.14.4
+  supabase_flutter: ^2.3.4
+
+  
   flutter_localizations:
     sdk: flutter
 
