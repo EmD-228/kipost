@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/proposal.dart';
+import '../models/supabase/supabase_models.dart';
 import 'supabase_service.dart';
 
 /// Service de gestion des propositions
@@ -24,10 +24,8 @@ class ProposalService {
       final proposalData = {
         'announcement_id': announcementId,
         'provider_id': currentUser.id,
-        'proposed_price': proposedPrice,
+        'amount': proposedPrice,
         'message': message,
-        'estimated_duration': estimatedDuration,
-        'status': 'pending',
       };
 
       final response = await _client

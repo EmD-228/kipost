@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/announcement.dart';
+import '../models/supabase/supabase_models.dart';
 import 'supabase_service.dart';
 
 /// Service de gestion des annonces
@@ -15,7 +15,7 @@ class AnnouncementService {
     required String category,
     required Map<String, dynamic> location,
     double? budget,
-    bool isUrgent = false,
+    String urgency = 'Modéré',
   }) async {
     final currentUser = _client.auth.currentUser;
     if (currentUser == null) {
@@ -30,8 +30,8 @@ class AnnouncementService {
         'category': category,
         'location': location,
         'budget': budget,
-        'is_urgent': isUrgent,
-        'status': 'open',
+        'urgency': urgency,
+        'status': 'active',
       };
 
       final response = await _client
@@ -54,25 +54,30 @@ class AnnouncementService {
     String? searchQuery,
   }) async {
     try {
-      var query = _client
+      // Construction progressive de la requête
+      String queryString = '*, client:profiles!client_id(*)';
+      
+      var queryBuilder = _client
           .from('announcements')
-          .select('*, client:profiles!client_id(*)')
-          .eq('status', 'open')
-          .order('created_at', ascending: false);
-
+          .select(queryString);
+      
+      // Application des filtres
+      queryBuilder = queryBuilder.eq('status', 'active');
+      
       if (category != null) {
-        query = query.eq('category', category);
+        queryBuilder = queryBuilder.eq('category', category);
       }
 
       if (maxBudget != null) {
-        query = query.lte('budget', maxBudget);
+        queryBuilder = queryBuilder.lte('budget', maxBudget);
       }
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        query = query.or('title.ilike.%$searchQuery%,description.ilike.%$searchQuery%');
+        queryBuilder = queryBuilder.or('title.ilike.%$searchQuery%,description.ilike.%$searchQuery%');
       }
 
-      final response = await query;
+      // Ordre et exécution
+      final response = await queryBuilder.order('created_at', ascending: false);
 
       return response.map((data) => AnnouncementModel.fromMap(data)).toList();
     } catch (e) {
@@ -123,7 +128,7 @@ class AnnouncementService {
     String? category,
     Map<String, dynamic>? location,
     double? budget,
-    bool? isUrgent,
+    String? urgency,
   }) async {
     final currentUser = _client.auth.currentUser;
     if (currentUser == null) {
@@ -138,7 +143,7 @@ class AnnouncementService {
       if (category != null) updateData['category'] = category;
       if (location != null) updateData['location'] = location;
       if (budget != null) updateData['budget'] = budget;
-      if (isUrgent != null) updateData['is_urgent'] = isUrgent;
+      if (urgency != null) updateData['urgency'] = urgency;
 
       if (updateData.isNotEmpty) {
         await _client
@@ -180,7 +185,7 @@ class AnnouncementService {
     try {
       await _client
           .from('announcements')
-          .update({'status': 'closed'})
+          .update({'status': 'cancelled'})
           .eq('id', announcementId)
           .eq('client_id', currentUser.id);
     } catch (e) {
@@ -213,17 +218,18 @@ class AnnouncementService {
     String? category,
     Map<String, dynamic>? location,
   }) {
-    var query = _client
+    // Stream simple sans filtres complexes pour éviter les erreurs de type
+    return _client
         .from('announcements')
         .stream(primaryKey: ['id'])
-        .eq('status', 'open')
-        .order('created_at', ascending: false);
-
-    if (category != null) {
-      query = query.eq('category', category);
-    }
-
-    return query.map((data) => 
-        data.map((item) => AnnouncementModel.fromMap(item)).toList());
+        .map((data) {
+          var filteredData = data.where((item) {
+            bool matchesStatus = item['status'] == 'active';
+            bool matchesCategory = category == null || item['category'] == category;
+            return matchesStatus && matchesCategory;
+          }).toList();
+          
+          return filteredData.map((item) => AnnouncementModel.fromMap(item)).toList();
+        });
   }
 }

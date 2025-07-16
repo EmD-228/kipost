@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/contract.dart';
+import '../models/supabase/supabase_models.dart';
 import 'supabase_service.dart';
 
 /// Service de gestion des contrats
@@ -311,9 +311,22 @@ class ContractService {
     return _client
         .from('contracts')
         .stream(primaryKey: ['id'])
-        .or('client_id.eq.${currentUser.id},provider_id.eq.${currentUser.id}')
-        .order('created_at', ascending: false)
-        .map((data) => 
-            data.map((item) => ContractModel.fromMap(item)).toList());
+        .map((data) {
+          // Filtrer côté client pour les contrats de l'utilisateur
+          final userContracts = data.where((item) {
+            final clientId = item['client_id'] as String?;
+            final providerId = item['provider_id'] as String?;
+            return clientId == currentUser.id || providerId == currentUser.id;
+          }).toList();
+          
+          // Trier par date de création (plus récent en premier)
+          userContracts.sort((a, b) {
+            final aDate = DateTime.parse(a['created_at'] as String);
+            final bDate = DateTime.parse(b['created_at'] as String);
+            return bDate.compareTo(aDate);
+          });
+          
+          return userContracts.map((item) => ContractModel.fromMap(item)).toList();
+        });
   }
 }

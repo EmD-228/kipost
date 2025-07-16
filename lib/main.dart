@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
 import 'package:kipost/app_route.dart';
+import 'package:kipost/config/supabase_config.dart';
 import 'package:kipost/controllers/announcement_controller.dart';
 import 'package:kipost/controllers/proposal_controller.dart';
 import 'package:kipost/controllers/calendar_controller.dart';
@@ -10,13 +11,26 @@ import 'package:kipost/controllers/notification_controller.dart';
 import 'package:kipost/controllers/work_controller.dart';
 import 'package:kipost/firebase_options.dart';
 import 'package:kipost/screens/auth/auth_screen.dart';
+import 'package:kipost/services/supabase_service.dart';
 import 'package:kipost/theme/app_theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'controllers/auth_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+   // Initialisation de Supabase selon la documentation
+  await Supabase.initialize(
+    url: SupabaseConfig.supabaseUrl,
+    anonKey: SupabaseConfig.supabaseAnonKey,
+  );
+
+  // Initialisation du service Supabase
+  await SupabaseService().initialize(
+    url: SupabaseConfig.supabaseUrl,
+    anonKey: SupabaseConfig.supabaseAnonKey,
   );
   runApp(const MyApp());
 }
@@ -59,4 +73,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+/// Helper pour un accès facile au client Supabase dans toute l'application
+/// Selon la documentation FRONTEND_BACKEND_INTERACTION.md
+final supabase = Supabase.instance.client;
 

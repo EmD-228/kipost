@@ -196,10 +196,17 @@ class StorageService {
   }
 
   /// Récupère les informations d'un fichier
-  Future<FileObject?> getFileInfo(String bucketName, String filePath) async {
+  Future<Map<String, dynamic>?> getFileInfo(String bucketName, String filePath) async {
     try {
       final response = await _client.storage.from(bucketName).info(filePath);
-      return response;
+      return {
+        'name': response.name,
+        'id': response.id,
+        'updated_at': response.updatedAt,
+        'created_at': response.createdAt,
+        'last_accessed_at': response.lastAccessedAt,
+        'metadata': response.metadata,
+      };
     } catch (e) {
       throw Exception('Erreur lors de la récupération des informations du fichier: $e');
     }

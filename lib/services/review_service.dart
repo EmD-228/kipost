@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/review.dart';
+import '../models/supabase/supabase_models.dart';
 import 'supabase_service.dart';
 
 /// Service de gestion des évaluations et avis

@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/user.dart';
+import '../models/supabase/supabase_models.dart';
 import 'supabase_service.dart';
 
 /// Service de gestion des profils utilisateur
@@ -10,7 +10,7 @@ class ProfileService {
   SupabaseClient get _client => _supabaseService.client;
 
   /// Récupère le profil d'un utilisateur par son ID
-  Future<UserModel?> getProfile(String userId) async {
+  Future<ProfileModel?> getProfile(String userId) async {
     try {
       final response = await _client
           .from('profiles')
@@ -18,14 +18,14 @@ class ProfileService {
           .eq('id', userId)
           .single();
       
-      return UserModel.fromMap(response, userId);
+      return ProfileModel.fromMap(response);
     } catch (e) {
       throw Exception('Erreur lors de la récupération du profil: $e');
     }
   }
 
   /// Récupère le profil de l'utilisateur connecté
-  Future<UserModel?> getCurrentProfile() async {
+  Future<ProfileModel?> getCurrentProfile() async {
     final currentUser = _client.auth.currentUser;
     if (currentUser == null) return null;
     
