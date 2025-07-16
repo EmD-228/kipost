@@ -3,8 +3,11 @@ import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:kipost/components/kipost_button.dart';
 import 'package:kipost/components/kipost_textfield.dart';
+import 'package:kipost/controllers/app_controller.dart';
 import 'package:kipost/controllers/auth_controller.dart';
 import 'package:kipost/app_route.dart';
+import 'package:kipost/theme/app_colors.dart';
+import 'package:kipost/utils/snackbar_helper.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,6 +17,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  AppController appController = Get.find<AppController>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -26,31 +30,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     if (!_acceptTerms) {
-      Get.snackbar(
-        'Erreur', 
-        'Vous devez accepter les conditions d\'utilisation',
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.black,
-        snackPosition: SnackPosition.TOP,
+      SnackbarHelper.showError(
+        title: 'Erreur',
+        message: 'Vous devez accepter les conditions d\'utilisation',
       );
       return;
     }
-    
+
     if (!_isClient && !_isProvider) {
-      Get.snackbar(
-        'Erreur', 
-        'Vous devez sélectionner au moins un rôle',
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.black,
-        snackPosition: SnackPosition.TOP,
+      SnackbarHelper.showError(
+        title: 'Erreur',
+        message: 'Vous devez sélectionner au moins un rôle',
       );
       return;
     }
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       await AuthController.to.register(
         _emailController.text.trim(),
@@ -59,12 +57,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _isClient,
         _isProvider,
       );
-      Get.snackbar(
-        'Succès', 
-        'Compte créé avec succès',
-        backgroundColor: Colors.green.shade100,
-        colorText: Colors.black,
-        snackPosition: SnackPosition.TOP,
+      SnackbarHelper.showSuccess(
+        title: 'Succès',
+        message: 'Compte créé avec succès',
       );
     } catch (e) {
       String errorMessage = 'Une erreur est survenue';
@@ -73,23 +68,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } else if (e.toString().contains('email-already-in-use')) {
         errorMessage = 'Cet email est déjà utilisé';
       }
-      
-      Get.snackbar(
-        'Erreur', 
-        errorMessage,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.black,
-        snackPosition: SnackPosition.TOP,
+
+      SnackbarHelper.showError(
+        title: 'Erreur',
+        message: errorMessage,
       );
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
+  getLoacation() {
+    appController.checkLocationAndInitialize();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getLoacation();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FF),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -98,19 +100,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: AppColors.shadow.withOpacity(0.04),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Iconsax.arrow_left,
-              color: Colors.grey,
+              color: AppColors.onSurfaceVariant,
               size: 20,
             ),
           ),
@@ -126,7 +128,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
-                  
+
                   // En-tête moderne
                   Center(
                     child: Column(
@@ -134,15 +136,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.deepPurple, Colors.deepPurple.shade300],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            gradient: AppColors.primaryGradient,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.deepPurple.withOpacity(0.15),
+                                color: AppColors.primary.withOpacity(0.15),
                                 blurRadius: 15,
                                 offset: const Offset(0, 5),
                               ),
@@ -151,27 +149,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: const Icon(
                             Iconsax.user_add,
                             size: 60,
-                            color: Colors.white,
+                            color: AppColors.onPrimary,
                           ),
                         ),
-                        
+
                         const SizedBox(height: 32),
-                        
+
                         Text(
                           'Créer un compte',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          style: Theme.of(
+                            context,
+                          ).textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
+                            color: AppColors.onBackground,
                           ),
                         ),
-                        
+
                         const SizedBox(height: 12),
-                        
+
                         Text(
                           'Rejoignez la communauté Kipost',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: AppColors.onSurfaceVariant,
                             fontSize: 16,
                             height: 1.5,
                           ),
@@ -179,18 +179,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 48),
-                  
+
                   // Formulaire d'inscription
                   Container(
                     padding: const EdgeInsets.all(32),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
+                          color: AppColors.shadow.withOpacity(0.04),
                           blurRadius: 20,
                           offset: const Offset(0, 4),
                         ),
@@ -213,29 +213,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         // Role selection
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
+                            color: AppColors.surfaceVariant.withOpacity(0.3),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade200),
+                            border: Border.all(color: AppColors.outlineVariant),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
-                                  Icon(Iconsax.user_tag, size: 20, color: Colors.deepPurple),
+                                  Icon(
+                                    Iconsax.user_tag,
+                                    size: 20,
+                                    color: AppColors.primary,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     'Je souhaite :',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w500,
-                                      color: Colors.grey.shade700,
+                                      color: AppColors.onSurface,
                                     ),
                                   ),
                                 ],
@@ -243,26 +247,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               const SizedBox(height: 12),
                               CheckboxListTile(
                                 title: const Text('Rechercher des services'),
-                                subtitle: const Text('Poster des annonces (Client)'),
+                                subtitle: const Text(
+                                  'Poster des annonces (Client)',
+                                ),
                                 value: _isClient,
                                 onChanged: (value) {
                                   setState(() {
                                     _isClient = value ?? true;
                                   });
                                 },
-                                activeColor: Colors.deepPurple,
+                                activeColor: AppColors.primary,
                                 contentPadding: EdgeInsets.zero,
                               ),
                               CheckboxListTile(
                                 title: const Text('Proposer des services'),
-                                subtitle: const Text('Répondre aux annonces (Prestataire)'),
+                                subtitle: const Text(
+                                  'Répondre aux annonces (Prestataire)',
+                                ),
                                 value: _isProvider,
                                 onChanged: (value) {
                                   setState(() {
                                     _isProvider = value ?? false;
                                   });
                                 },
-                                activeColor: Colors.deepPurple,
+                                activeColor: AppColors.primary,
                                 contentPadding: EdgeInsets.zero,
                               ),
                               if (!_isClient && !_isProvider)
@@ -271,7 +279,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   child: Text(
                                     'Vous devez sélectionner au moins un rôle',
                                     style: TextStyle(
-                                      color: Colors.red.shade600,
+                                      color: AppColors.error,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -279,9 +287,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ],
                           ),
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         KipostTextField(
                           controller: _emailController,
                           label: 'Adresse email',
@@ -297,9 +305,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         KipostTextField(
                           controller: _passwordController,
                           label: 'Mot de passe',
@@ -316,9 +324,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         KipostTextField(
                           controller: _confirmPasswordController,
                           label: 'Confirmer le mot de passe',
@@ -335,9 +343,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Checkbox conditions d'utilisation
                         Row(
                           children: [
@@ -346,7 +354,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               onChanged: (value) {
                                 setState(() => _acceptTerms = value ?? false);
                               },
-                              activeColor: Colors.deepPurple,
+                              activeColor: AppColors.primary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(4),
                               ),
@@ -356,14 +364,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 TextSpan(
                                   text: 'J\'accepte les ',
                                   style: TextStyle(
-                                    color: Colors.grey.shade600,
+                                    color: AppColors.onSurfaceVariant,
                                     fontSize: 14,
                                   ),
                                   children: [
                                     TextSpan(
                                       text: 'conditions d\'utilisation',
                                       style: TextStyle(
-                                        color: Colors.deepPurple,
+                                        color: AppColors.primary,
                                         fontWeight: FontWeight.w600,
                                         decoration: TextDecoration.underline,
                                       ),
@@ -371,13 +379,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     TextSpan(
                                       text: ' et la ',
                                       style: TextStyle(
-                                        color: Colors.grey.shade600,
+                                        color: AppColors.onSurfaceVariant,
                                       ),
                                     ),
                                     TextSpan(
                                       text: 'politique de confidentialité',
                                       style: TextStyle(
-                                        color: Colors.deepPurple,
+                                        color: AppColors.primary,
                                         fontWeight: FontWeight.w600,
                                         decoration: TextDecoration.underline,
                                       ),
@@ -388,29 +396,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ],
                         ),
-                        
+
                         const SizedBox(height: 32),
-                        
+
                         // Bouton d'inscription
                         Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.deepPurple, Colors.deepPurple.shade300],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
+                            gradient: AppColors.primaryGradient,
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.deepPurple.withOpacity(0.15),
+                                color: AppColors.primary.withOpacity(0.15),
                                 blurRadius: 8,
                                 offset: const Offset(0, 3),
                               ),
                             ],
                           ),
                           child: KipostButton(
-                            label: _isLoading ? 'Création...' : 'Créer mon compte',
+                            label:
+                                _isLoading ? 'Création...' : 'Créer mon compte',
                             onPressed: _isLoading ? null : _register,
                             icon: Iconsax.user_add,
                           ),
@@ -418,16 +423,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Séparateur
                   Row(
                     children: [
                       Expanded(
                         child: Container(
                           height: 1,
-                          color: Colors.grey.shade300,
+                          color: AppColors.outlineVariant,
                         ),
                       ),
                       Padding(
@@ -435,7 +440,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Text(
                           'ou',
                           style: TextStyle(
-                            color: Colors.grey.shade500,
+                            color: AppColors.onSurfaceVariant,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -443,23 +448,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       Expanded(
                         child: Container(
                           height: 1,
-                          color: Colors.grey.shade300,
+                          color: AppColors.outlineVariant,
                         ),
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Lien vers connexion
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 24,
+                    ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Colors.grey.shade200,
+                        color: AppColors.outlineVariant,
                         width: 2,
                       ),
                     ),
@@ -471,14 +479,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         children: [
                           Icon(
                             Iconsax.login,
-                            color: Colors.deepPurple,
+                            color: AppColors.primary,
                             size: 20,
                           ),
                           const SizedBox(width: 12),
                           Text(
                             "Déjà un compte ? Se connecter",
-                            style: const TextStyle(
-                              color: Colors.deepPurple,
+                            style: TextStyle(
+                              color: AppColors.primary,
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
                             ),
@@ -487,7 +495,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 40),
                 ],
               ),

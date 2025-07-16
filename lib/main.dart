@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:kipost/app_route.dart';
 import 'package:kipost/config/supabase_config.dart';
 import 'package:kipost/controllers/announcement_controller.dart';
+import 'package:kipost/controllers/app_controller.dart';
 import 'package:kipost/controllers/proposal_controller.dart';
 import 'package:kipost/controllers/calendar_controller.dart';
 import 'package:kipost/controllers/notification_controller.dart';
@@ -21,12 +22,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-   // Initialisation de Supabase selon la documentation
-  await Supabase.initialize(
-    url: SupabaseConfig.supabaseUrl,
-    anonKey: SupabaseConfig.supabaseAnonKey,
-  );
-
+ 
   // Initialisation du service Supabase
   await SupabaseService().initialize(
     url: SupabaseConfig.supabaseUrl,
@@ -41,6 +37,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Initialisation des contrôleurs
+    Get.put(AppController());
     Get.put(AuthController());
      Get.put(WorkController());
     Get.put(AnnouncementController());
