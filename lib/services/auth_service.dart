@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_service.dart';
+import 'package:logger/logger.dart';
+
 
 /// Service d'authentification pour Kipost
 class AuthService {
@@ -25,7 +27,9 @@ class AuthService {
       );
       return response;
     } catch (e) {
-      throw Exception('Erreur lors de l\'inscription: $e');
+      Logger().e('Erreur lors de l\'inscription: $e');
+      
+       throw Exception('Erreur lors de l\'inscription: $e');
     }
   }
 
@@ -41,6 +45,7 @@ class AuthService {
       );
       return response;
     } catch (e) {
+       Logger().e('Erreur lors de l\'inscription: $e'); 
       throw Exception('Erreur lors de la connexion: $e');
     }
   }
@@ -50,6 +55,7 @@ class AuthService {
     try {
       await _client.auth.signOut();
     } catch (e) {
+      Logger().e('Erreur lors de la déconnexion: $e');
       throw Exception('Erreur lors de la déconnexion: $e');
     }
   }
@@ -59,6 +65,7 @@ class AuthService {
     try {
       await _client.auth.resetPasswordForEmail(email);
     } catch (e) {
+      Logger().e('Erreur lors de la réinitialisation: $e');
       throw Exception('Erreur lors de la réinitialisation: $e');
     }
   }

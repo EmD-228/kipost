@@ -3,9 +3,11 @@ import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:kipost/components/kipost_button.dart';
 import 'package:kipost/components/kipost_textfield.dart';
-import 'package:kipost/controllers/auth_controller.dart';
+import 'package:kipost/services/auth_service.dart';
 import 'package:kipost/app_route.dart';
 import 'package:kipost/theme/app_colors.dart';
+import 'package:kipost/utils/snackbar_helper.dart';
+import 'package:kipost/utils/auth_error_handler.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,6 +17,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // Service d'authentification Supabase
+  final AuthService _authService = AuthService();
+  
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -26,24 +31,26 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     
     try {
-      await AuthController.to.login(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
+      // Connexion avec AuthService
+      await _authService.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
       );
-      Get.snackbar(
-        'Succès', 
-        'Connexion réussie',
-        backgroundColor: Colors.green.shade100,
-        colorText: Colors.black,
-        snackPosition: SnackPosition.TOP,
+      
+      SnackbarHelper.showSuccess(
+        title: 'Succès',
+        message: AuthErrorHandler.signInSuccess,
       );
+      
+      // Redirection vers la page d'accueil
+      Get.offAllNamed(AppRoutes.home);
     } catch (e) {
-      Get.snackbar(
-        'Erreur', 
-        'Email ou mot de passe incorrect',
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.black,
-        snackPosition: SnackPosition.TOP,
+      // Utiliser le gestionnaire d'erreurs centralisé
+      final errorMessage = AuthErrorHandler.getSignInErrorMessage(e);
+      
+      SnackbarHelper.showError(
+        title: 'Erreur',
+        message: errorMessage,
       );
     } finally {
       setState(() => _isLoading = false);
@@ -53,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FF),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -62,19 +69,19 @@ class _LoginScreenState extends State<LoginScreen> {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: AppColors.shadow.withOpacity(0.04),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Iconsax.arrow_left,
-              color: Colors.grey,
+              color: AppColors.onSurfaceVariant,
               size: 20,
             ),
           ),

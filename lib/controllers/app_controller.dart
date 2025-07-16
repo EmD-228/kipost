@@ -10,16 +10,17 @@ class AppController extends GetxController {
   final Rx<Position?> currentPosition = Rx<Position?>(null);
   final RxString currentAddress = ''.obs;
   final RxBool isLoadingLocation = false.obs;
+  var location = {}.obs;
 
   // Vérifier et initialiser la localisation
   Future<void> checkLocationAndInitialize() async {
     try {
       isLoadingLocation.value = true;
-      
+
       // Vérifier si les services de localisation sont activés
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       isLocationServiceEnabled.value = serviceEnabled;
-      
+
       if (!serviceEnabled) {
         _showLocationServiceDialog();
         return;
@@ -28,9 +29,10 @@ class AppController extends GetxController {
       // Vérifier les permissions
       LocationPermission permission = await Geolocator.checkPermission();
       await _handleLocationPermission(permission);
-      
     } catch (e) {
-      printError(info: 'Erreur lors de l\'initialisation de la localisation: $e');
+      printError(
+        info: 'Erreur lors de l\'initialisation de la localisation: $e',
+      );
       Get.snackbar(
         'Erreur',
         'Impossible d\'accéder à la localisation',
@@ -46,10 +48,11 @@ class AppController extends GetxController {
   void _showLocationServiceDialog() {
     // Vérifier si un dialogue est déjà ouvert
     if (Get.isDialogOpen ?? false) return;
-    
+
     Get.dialog(
       WillPopScope(
-        onWillPop: () async => false, // Empêcher la fermeture avec le bouton retour
+        onWillPop:
+            () async => false, // Empêcher la fermeture avec le bouton retour
         child: AlertDialog(
           title: const Text('Services de localisation désactivés'),
           content: const Text(
@@ -81,7 +84,8 @@ class AppController extends GetxController {
           ],
         ),
       ),
-      barrierDismissible: false, // Empêcher la fermeture en cliquant à l'extérieur
+      barrierDismissible:
+          false, // Empêcher la fermeture en cliquant à l'extérieur
       navigatorKey: Get.key, // Utiliser la clé du navigateur GetX
     );
   }
@@ -118,10 +122,11 @@ class AppController extends GetxController {
   void _showPermissionDeniedDialog() {
     // Vérifier si un dialogue est déjà ouvert
     if (Get.isDialogOpen ?? false) return;
-    
+
     Get.dialog(
       WillPopScope(
-        onWillPop: () async => false, // Empêcher la fermeture avec le bouton retour
+        onWillPop:
+            () async => false, // Empêcher la fermeture avec le bouton retour
         child: AlertDialog(
           title: const Text('Permission de localisation refusée'),
           content: const Text(
@@ -153,7 +158,8 @@ class AppController extends GetxController {
           ],
         ),
       ),
-      barrierDismissible: false, // Empêcher la fermeture en cliquant à l'extérieur
+      barrierDismissible:
+          false, // Empêcher la fermeture en cliquant à l'extérieur
       navigatorKey: Get.key, // Utiliser la clé du navigateur GetX
     );
   }
@@ -162,17 +168,16 @@ class AppController extends GetxController {
   Future<void> getCurrentLocation() async {
     try {
       isLoadingLocation.value = true;
-      
+
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      
+
       currentPosition.value = position;
       printInfo(info: 'Position actuelle: $position');
 
       // Obtenir l\'adresse
       await getAddressFromPosition(position);
-      
     } catch (e) {
       printError(info: 'Erreur lors de l\'obtention de la position: $e');
       Get.snackbar(
@@ -190,15 +195,21 @@ class AppController extends GetxController {
   Future<void> getAddressFromPosition(Position position) async {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(
-        position.latitude, 
-        position.longitude
+        position.latitude,
+        position.longitude,
       );
-      
+
       if (placemarks.isNotEmpty) {
         Placemark placemark = placemarks[0];
-        currentAddress.value = 
-          '${placemark.street}, ${placemark.locality}, ${placemark.country}';
+        currentAddress.value =
+            '${placemark.street}, ${placemark.locality}, ${placemark.country}';
         printInfo(info: 'Adresse actuelle: ${currentAddress.value}');
+        location.value = {
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+          'city': placemark.locality,
+          'country': placemark.country,
+        };
       }
     } catch (e) {
       printError(info: 'Erreur lors de l\'obtention de l\'adresse: $e');
@@ -216,11 +227,11 @@ class AppController extends GetxController {
     if (!isLocationServiceEnabled.value) {
       return Future.error('Location services are disabled.');
     }
-    
+
     if (!hasLocationPermission.value) {
       return Future.error('Location permissions are denied');
     }
-    
+
     return await Geolocator.getCurrentPosition();
   }
 
@@ -231,10 +242,10 @@ class AppController extends GetxController {
       _showLocationServiceDialog();
       return;
     }
-    
+
     // Si aucun dialogue n'est ouvert et que les permissions sont refusées définitivement
-    if (!(Get.isDialogOpen ?? false) && 
-        isLocationServiceEnabled.value && 
+    if (!(Get.isDialogOpen ?? false) &&
+        isLocationServiceEnabled.value &&
         !hasLocationPermission.value) {
       // Vérifier à nouveau les permissions pour s'assurer qu'elles sont bien refusées définitivement
       Geolocator.checkPermission().then((permission) {

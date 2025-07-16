@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kipost/theme/app_colors.dart';
 
 class KipostButton extends StatelessWidget {
   final String label;
@@ -22,7 +23,7 @@ class KipostButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: loading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: AppColors.primary,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -34,7 +35,7 @@ class KipostButton extends StatelessWidget {
                 width: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.white,
+                  color: AppColors.onPrimary,
                 ),
               )
             : Row(
@@ -42,14 +43,14 @@ class KipostButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, color: Colors.white),
+                    Icon(icon, color: AppColors.onPrimary),
                     const SizedBox(width: 8),
                   ],
                   Text(
                     label,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.onPrimary,
                     ),
                   ),
                 ],
