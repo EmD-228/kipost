@@ -1,5 +1,8 @@
+
+import 'package:kipost/models/supabase/supabase_models.dart';
+import 'package:logger/logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/supabase/supabase_models.dart';
+
 import 'supabase_service.dart';
 
 /// Service de gestion des annonces
@@ -81,7 +84,97 @@ class AnnouncementService {
 
       return response.map((data) => AnnouncementModel.fromMap(data)).toList();
     } catch (e) {
+      Logger().e('Erreur lors de la récupération des annonces: $e');
       throw Exception('Erreur lors de la récupération des annonces: $e');
+    }
+  }
+
+  /// Récupère les annonces avec pagination (10 par page)
+  Future<Map<String, dynamic>> getAnnouncementsPaginated({
+    int page = 0,
+    int limit = 10,
+    String? category,
+    Map<String, dynamic>? location,
+    double? maxBudget,
+    String? searchQuery,
+  }) async {
+    try {
+      // Calcul de l'offset
+      final offset = page * limit;
+      
+      // Construction progressive de la requête pour le count
+      var countQuery = _client
+          .from('announcements')
+          .select('id');
+      
+      // Application des filtres pour le count
+      countQuery = countQuery.eq('status', 'active');
+      
+      if (category != null) {
+        countQuery = countQuery.eq('category', category);
+      }
+
+      if (maxBudget != null) {
+        countQuery = countQuery.lte('budget', maxBudget);
+      }
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        countQuery = countQuery.or('title.ilike.%$searchQuery%,description.ilike.%$searchQuery%');
+      }
+
+      // Construction de la requête principale
+      String queryString = '*, client:profiles!client_id(*)';
+      
+      var queryBuilder = _client
+          .from('announcements')
+          .select(queryString);
+      
+      // Application des mêmes filtres
+      queryBuilder = queryBuilder.eq('status', 'active');
+      
+      if (category != null) {
+        queryBuilder = queryBuilder.eq('category', category);
+      }
+
+      if (maxBudget != null) {
+        queryBuilder = queryBuilder.lte('budget', maxBudget);
+      }
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        queryBuilder = queryBuilder.or('title.ilike.%$searchQuery%,description.ilike.%$searchQuery%');
+      }
+
+      // Exécution des requêtes
+      final countResponse = await countQuery;
+      final totalCount = countResponse.length;
+
+      // Ordre, pagination et exécution de la requête principale
+      final response = await queryBuilder
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+
+      final announcements = response.map((data) => AnnouncementModel.fromMap(data)).toList();
+
+      // Calculs de pagination
+      final totalPages = (totalCount / limit).ceil();
+      final hasNextPage = page < totalPages - 1;
+      final hasPreviousPage = page > 0;
+
+      return {
+        'announcements': announcements,
+        'pagination': {
+          'currentPage': page,
+          'totalPages': totalPages,
+          'totalCount': totalCount,
+          'hasNextPage': hasNextPage,
+          'hasPreviousPage': hasPreviousPage,
+          'limit': limit,
+          'offset': offset,
+        }
+      };
+    } catch (e) {
+      Logger().e('Erreur lors de la récupération des annonces paginées: $e');
+      throw Exception('Erreur lors de la récupération des annonces paginées: $e');
     }
   }
 
@@ -116,6 +209,7 @@ class AnnouncementService {
 
       return response.map((data) => AnnouncementModel.fromMap(data)).toList();
     } catch (e) {
+      Logger().e('Erreur lors de la récupération des annonces: $e');
       throw Exception('Erreur lors de la récupération des annonces: $e');
     }
   }
@@ -153,6 +247,7 @@ class AnnouncementService {
             .eq('client_id', currentUser.id);
       }
     } catch (e) {
+      Logger().e('Erreur lors de la mise à jour de l\'annonce: $e');
       throw Exception('Erreur lors de la mise à jour de l\'annonce: $e');
     }
   }
@@ -171,6 +266,7 @@ class AnnouncementService {
           .eq('id', announcementId)
           .eq('client_id', currentUser.id);
     } catch (e) {
+      Logger().e('Erreur lors de la suppression de l\'annonce: $e');
       throw Exception('Erreur lors de la suppression de l\'annonce: $e');
     }
   }
@@ -189,6 +285,7 @@ class AnnouncementService {
           .eq('id', announcementId)
           .eq('client_id', currentUser.id);
     } catch (e) {
+      Logger().e('Erreur lors de la fermeture de l\'annonce: $e');
       throw Exception('Erreur lors de la fermeture de l\'annonce: $e');
     }
   }
@@ -209,6 +306,7 @@ class AnnouncementService {
 
       return response.map((data) => AnnouncementModel.fromMap(data)).toList();
     } catch (e) {
+      Logger().e('Erreur lors de la recherche géographique: $e');
       throw Exception('Erreur lors de la recherche géographique: $e');
     }
   }

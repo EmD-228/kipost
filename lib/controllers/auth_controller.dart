@@ -12,8 +12,8 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     // Écouter les changements d'état d'authentification
-    firebaseUser.bindStream(FirebaseAuth.instance.authStateChanges());
-    ever(firebaseUser, _setInitialScreen);
+    // firebaseUser.bindStream(FirebaseAuth.instance.authStateChanges());
+    // ever(firebaseUser, _setInitialScreen);
     super.onInit();
   }
 

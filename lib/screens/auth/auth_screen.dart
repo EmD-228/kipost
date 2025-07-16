@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:kipost/app_route.dart';
+import 'package:kipost/services/auth_service.dart';
+import 'package:kipost/theme/app_colors.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -11,19 +13,44 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
+  final AuthService _authService = AuthService();
+
   @override
   void initState() {
     super.initState();
-    // Rediriger automatiquement vers l'écran d'accueil d'authentification
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Get.offAllNamed(AppRoutes.authWelcome);
-    });
+    _checkAuthenticationStatus();
+  }
+
+  /// Vérifie si l'utilisateur est déjà connecté
+  Future<void> _checkAuthenticationStatus() async {
+    try {
+      // Attendre un petit délai pour l'animation de chargement
+      await Future.delayed(const Duration(milliseconds: 5000));
+      
+      // Vérifier si l'utilisateur est connecté
+      final isAuthenticated = _authService.isAuthenticated;
+      
+      if (mounted) {
+        if (isAuthenticated) {
+          // Utilisateur connecté → rediriger vers l'accueil
+          Get.offAllNamed(AppRoutes.home);
+        } else {
+          // Utilisateur non connecté → rediriger vers l'authentification
+          Get.offAllNamed(AppRoutes.authWelcome);
+        }
+      }
+    } catch (e) {
+      // En cas d'erreur, rediriger vers l'authentification
+      if (mounted) {
+        Get.offAllNamed(AppRoutes.authWelcome);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FF),
+      backgroundColor: AppColors.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -31,35 +58,31 @@ class _AuthScreenState extends State<AuthScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.deepPurple, Colors.deepPurple.shade300],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                gradient: AppColors.primaryGradient,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.deepPurple.withOpacity(0.3),
+                    color: AppColors.primary.withOpacity(0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
                 ],
               ),
               child: const Icon(
-                Iconsax.message_programming,
+                Iconsax.user_octagon,
                 size: 60,
-                color: Colors.white,
+                color: AppColors.onPrimary,
               ),
             ),
             const SizedBox(height: 24),
-            const CircularProgressIndicator(
-              color: Colors.deepPurple,
+            CircularProgressIndicator(
+              color: AppColors.primary,
             ),
             const SizedBox(height: 16),
             Text(
-              'Chargement...',
+              'Vérification de l\'authentification...',
               style: TextStyle(
-                color: Colors.grey.shade600,
+                color: AppColors.onSurfaceVariant,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),

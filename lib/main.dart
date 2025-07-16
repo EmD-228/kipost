@@ -65,8 +65,9 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       getPages: AppRoutes.routes,
+      initialRoute: AppRoutes.auth,
       // Page d'accueil initiale - AuthController se charge de la navigation
-      home: const AuthScreen(),
+      // home: const AuthScreen(),
     );
   }
 }
