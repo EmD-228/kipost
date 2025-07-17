@@ -31,12 +31,12 @@ class AppRoutes {
   static const String notifications = '/notifications';
 
   static final routes = [
-    GetPage(name: home, page: () => const MyHomePage(title: 'Kipost Home')),
-    GetPage(name: auth, page: () => const AuthScreen()),
     GetPage(name: authWelcome, page: () => const AuthWelcomeScreen()),
+    GetPage(name: auth, page: () => const AuthScreen()),
     GetPage(name: login, page: () => const LoginScreen()),
     GetPage(name: register, page: () => const RegisterScreen()),
     GetPage(name: forgotPassword, page: () => const ForgotPasswordScreen()),
+    GetPage(name: home, page: () => const MyHomePage(title: 'Kipost Home')),
     GetPage(name: profile, page: () => const ProfileScreen()),
     GetPage(name: createAnnouncement, page: () => const CreateAnnouncementSimpleScreen()),
     GetPage(name: announcementDetail, page: () => const AnnouncementDetailScreen()),
