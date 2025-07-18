@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kipost/models/tab_config.dart';
+import 'package:kipost/theme/app_colors.dart';
 
 class TabHeader extends StatelessWidget {
   final String title;
@@ -18,10 +19,9 @@ class TabHeader extends StatelessWidget {
     return Container(
       color: Colors.white,
       child: Column(
-        children: [
-          _buildSectionTitle(context),
-          _buildCustomTabBar(),
-        ],
+        crossAxisAlignment: CrossAxisAlignment.start,
+
+        children: [_buildSectionTitle(context), _buildCustomTabBar()],
       ),
     );
   }
@@ -29,18 +29,13 @@ class TabHeader extends StatelessWidget {
   Widget _buildSectionTitle(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.deepPurple, size: 24),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
-            ),
-          ),
-        ],
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Colors.grey.shade800,
+          fontSize: 24,
+        ),
       ),
     );
   }
@@ -48,18 +43,12 @@ class TabHeader extends StatelessWidget {
   Widget _buildCustomTabBar() {
     return TabBar(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      indicator: BoxDecoration(
-        color: Colors.deepPurple,
-        borderRadius: BorderRadius.circular(25),
-      ),
-      indicatorSize: TabBarIndicatorSize.tab,
+
+      indicatorSize: TabBarIndicatorSize.label,
       dividerColor: Colors.transparent,
-      labelColor: Colors.white,
+      labelColor: AppColors.secondary,
       unselectedLabelColor: Colors.grey.shade600,
-      labelStyle: const TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 14,
-      ),
+      labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
       unselectedLabelStyle: const TextStyle(
         fontWeight: FontWeight.normal,
         fontSize: 14,
@@ -72,14 +61,7 @@ class TabHeader extends StatelessWidget {
     return Tab(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(config.icon, size: 16),
-            const SizedBox(width: 8),
-            Text(config.label),
-          ],
-        ),   
+        child: Text(config.label),
       ),
     );
   }

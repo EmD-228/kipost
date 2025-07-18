@@ -47,63 +47,67 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FF),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        shadowColor: Colors.black26,
-        toolbarHeight: 70,
-        title: Row(
-          children: [
-            AppText.heading1(
-              "kipost",
-              color: AppColors.primary,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-            ),
+      appBar:
+          _selectedIndex == 0
+              ? AppBar(
+                backgroundColor: Colors.white,
+                elevation: 0,
+                shadowColor: Colors.black26,
+                toolbarHeight: 70,
+                title: Row(
+                  children: [
+                    AppText.heading1(
+                      "kipost",
+                      color: AppColors.primary,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                    ),
 
-            const Spacer(),
-            // Icône de notification avec compteur
-            Obx(() {
-              final notificationController = Get.find<NotificationController>();
-              final unreadCount = notificationController.unreadCount;
+                    const Spacer(),
+                    // Icône de notification avec compteur
+                    Obx(() {
+                      final notificationController =
+                          Get.find<NotificationController>();
+                      final unreadCount = notificationController.unreadCount;
 
-              return GestureDetector(
-                onTap: () => Get.toNamed(AppRoutes.notifications),
-                child: Badge(
-                  isLabelVisible: unreadCount > 0,
-                  label: Text(
-                    unreadCount > 99 ? '99+' : unreadCount.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  backgroundColor: Colors.red,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryContainer,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Iconsax.notification,
-                      color: AppColors.onPrimaryContainer,
-                      size: 24,
-                    ),
-                  ),
+                      return GestureDetector(
+                        onTap: () => Get.toNamed(AppRoutes.notifications),
+                        child: Badge(
+                          isLabelVisible: unreadCount > 0,
+                          label: Text(
+                            unreadCount > 99 ? '99+' : unreadCount.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          backgroundColor: Colors.red,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryContainer,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Iconsax.notification,
+                              color: AppColors.onPrimaryContainer,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
                 ),
-              );
-            }),
-          ],
-        ),
-      ),
+              )
+              : null,
       body: _getSelectedTab(),
       floatingActionButton:
           _selectedIndex == 0
               ? Container(
                 decoration: BoxDecoration(
-                  color:AppColors.primary,
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -171,7 +175,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
-          selectedItemColor:AppColors.primary,
+          selectedItemColor: AppColors.primary,
           unselectedItemColor: Colors.grey.shade400,
           showUnselectedLabels: true,
           selectedIconTheme: Get.theme.iconTheme.copyWith(

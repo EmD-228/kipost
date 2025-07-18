@@ -30,24 +30,27 @@ class _ProposalsTabState extends State<ProposalsTab>
     super.build(context); // Required for AutomaticKeepAliveClientMixin
     print('🔍 DEBUG: ProposalsTab build called');
 
-    return DefaultTabController(
-      length: 2,
-      child: Column(
-        children: [
-          TabHeader(
-            title: 'Mes Propositions',
-            icon: Iconsax.note_2,
-            tabs: _getProposalTabs(),
-          ),
-          const Expanded(
-            child: TabBarView(
-              children: [
-                SentProposalsTab(),
-                ReceivedProposalsTab(),
-              ],
+    return SafeArea(
+      child: DefaultTabController(
+        length: 2,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TabHeader(
+              title: 'Mes Propositions',
+              icon: Iconsax.note_2,
+              tabs: _getProposalTabs(),
             ),
-          ),
-        ],
+            const Expanded(
+              child: TabBarView(
+                children: [
+                  SentProposalsTab(),
+                  ReceivedProposalsTab(),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
