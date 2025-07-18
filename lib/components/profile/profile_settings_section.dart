@@ -28,9 +28,9 @@ class ProfileSettingsSection extends StatelessWidget {
             child: Text(
               'Paramètres',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
+                color: Colors.black,
               ),
             ),
           ),
