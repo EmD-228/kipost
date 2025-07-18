@@ -1,24 +1,13 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:kipost/models/proposal.dart';
-import 'package:kipost/models/announcement.dart';
-import 'package:kipost/controllers/proposal_controller.dart';
-import 'package:kipost/controllers/work_controller.dart';
-import 'package:kipost/models/work_details.dart';
-import 'package:kipost/utils/app_status.dart';
-import 'package:kipost/utils/map_utils.dart';
-import 'package:kipost/components/proposal/proposal_card.dart';
-import 'package:kipost/components/proposal/announcement_card.dart';
-import 'package:kipost/components/proposal/message_card.dart';
-import 'package:kipost/components/proposal/schedule_card.dart';
-import 'package:kipost/components/proposal/planned_work_card.dart';
-import 'package:kipost/components/proposal/action_buttons_section.dart';
-import 'package:kipost/components/proposal/sender_actions_card.dart';
+import 'package:kipost/models/supabase/supabase_models.dart';
+import 'package:kipost/services/proposal_service.dart';
+import 'package:kipost/services/announcement_service.dart';
+import 'package:kipost/services/auth_service.dart';
 
 class ProposalDetailScreen extends StatefulWidget {
-  final Proposal proposal;
+  final ProposalModel proposal;
   final String? viewMode; // 'sent', 'received', 'accepted'
 
   const ProposalDetailScreen({
@@ -33,19 +22,15 @@ class ProposalDetailScreen extends StatefulWidget {
 
 class _ProposalDetailScreenState extends State<ProposalDetailScreen>
     with TickerProviderStateMixin {
-  final _formKey = GlobalKey<FormState>();
   final _locationController = TextEditingController();
   final _notesController = TextEditingController();
-  final WorkController _workController = Get.put(WorkController());
-  final ProposalController _proposalController = Get.put(ProposalController());
+  final ProposalService _proposalService = ProposalService();
+  final AnnouncementService _announcementService = AnnouncementService();
+  final AuthService _authService = AuthService();
 
-  late Proposal currentProposal;
-  late WorkDetails currentWorkDetails;
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
-  bool _showScheduleForm = false;
-  Announcement? _announcement;
-  bool _loadingAnnouncement = true;
+  late ProposalModel currentProposal;
+  AnnouncementModel? _announcement;
+  bool _isLoading = true;
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -79,24 +64,18 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
 
   Future<void> _loadAnnouncementData() async {
     try {
-      final announcement = await _proposalController.getAnnouncementForProposal(
+      final announcement = await _announcementService.getAnnouncement(
         currentProposal.announcementId,
       );
-      await _workController.getWorkDetailsByProposal(currentProposal.id).then((
-        workDetails,
-      ) {
-        if (workDetails != null) {
-          currentWorkDetails = workDetails;
-        }
-      });
+      
       setState(() {
         _announcement = announcement;
-        _loadingAnnouncement = false;
+        _isLoading = false;
       });
     } catch (e) {
       print('Error loading announcement: $e');
       setState(() {
-        _loadingAnnouncement = false;
+        _isLoading = false;
       });
     }
   }
@@ -110,13 +89,13 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
   }
 
   bool get _isCurrentUserSender {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    return currentUser?.uid == currentProposal.userId;
+    final currentUser = _authService.currentUser;
+    return currentUser?.id == currentProposal.providerId;
   }
 
   bool get _isCurrentUserReceiver {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    return _announcement?.creatorId == currentUser?.uid;
+    final currentUser = _authService.currentUser;
+    return _announcement?.clientId == currentUser?.id;
   }
 
   String get _screenTitle {
@@ -148,218 +127,492 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
           ),
         ),
       ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ProposalCard(
-                  proposal: currentProposal,
-                  announcementCreatorEmail: _announcement?.creatorEmail,
-                  isCurrentUserSender: _isCurrentUserSender,
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Message de proposition
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Iconsax.message,
+                                  color: Colors.blue.shade600,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Message de candidature',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.blue.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              currentProposal.message,
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Colors.grey.shade700,
+                                height: 1.5,
+                              ),
+                            ),
+                            if (currentProposal.amount != null) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.green.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Iconsax.wallet,
+                                      color: Colors.green.shade600,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Montant proposé: ${currentProposal.amount!.toStringAsFixed(0)} €',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.green.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Informations sur l'annonce
+                      if (_announcement != null)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Iconsax.task,
+                                    color: Colors.orange.shade600,
+                                    size: 24,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Annonce concernée',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.orange.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                _announcement!.title,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _announcement!.description,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade700,
+                                  height: 1.4,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Iconsax.category,
+                                    size: 16,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _announcement!.category,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  if (_announcement!.city != null) ...[
+                                    Icon(
+                                      Iconsax.location,
+                                      size: 16,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _announcement!.city!,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              if (_announcement!.budget != null) ...[
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Iconsax.wallet,
+                                      size: 16,
+                                      color: Colors.green.shade600,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Budget: ${_announcement!.budget!.toStringAsFixed(0)} €',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.green.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      const SizedBox(height: 20),
+
+                      // Statut de la proposition
+                      _buildStatusCard(),
+                      const SizedBox(height: 20),
+
+                      // Actions selon le statut
+                      if (currentProposal.status == 'pending' && _isCurrentUserReceiver)
+                        _buildReceiverActions(),
+                      if (currentProposal.status == 'pending' && _isCurrentUserSender)
+                        _buildSenderPendingActions(),
+                      if (currentProposal.status == 'accepted')
+                        _buildAcceptedActions(),
+                      if (currentProposal.status == 'rejected')
+                        _buildRejectedStatus(),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 20),
-                AnnouncementCard(
-                  announcement: _announcement,
-                  isLoading: _loadingAnnouncement,
-                  announcementId: currentProposal.announcementId,
-                ),
-                const SizedBox(height: 20),
-                MessageCard(message: currentProposal.message),
-                const SizedBox(height: 20),
-                if (currentProposal.status == 'pending' &&
-                    _isCurrentUserReceiver)
-                  ActionButtonsSection(
-                    proposal: currentProposal,
-                    onAccept: () => _updateProposalStatus(ProposalStatus.accepted),
-                    onReject: () => _updateProposalStatus(ProposalStatus.rejected),
-                    onContact: () {
-                      // TODO: Implement contact functionality
-                    },
-                  ),
-                if (currentProposal.status == 'pending' &&
-                    _isCurrentUserSender)
-                  _buildSenderPendingActions(),
-                if (currentProposal.status == 'accepted' &&
-                    currentProposal.workDetailId.isEmpty &&
-                    _isCurrentUserReceiver)
-                  ScheduleCard(
-                    showScheduleForm: _showScheduleForm,
-                    onPlanifyPressed: () {
-                      setState(() {
-                        _showScheduleForm = true;
-                      });
-                    },
-                    onScheduleWork: _scheduleWork,
-                    onCancel: () {
-                      setState(() {
-                        _showScheduleForm = false;
-                      });
-                    },
-                    formKey: _formKey,
-                    locationController: _locationController,
-                    notesController: _notesController,
-                    selectedDate: _selectedDate,
-                    selectedTime: _selectedTime,
-                    onSelectDate: _selectDate,
-                    onSelectTime: _selectTime,
-                  ),
-                if (currentProposal.status == 'accepted' &&
-                    currentProposal.workDetailId.isNotEmpty &&
-                    _isCurrentUserReceiver)
-                  PlannedWorkCard(proposal: currentProposal),
-                if (currentProposal.status == 'accepted' &&
-                    currentProposal.workDetailId.isNotEmpty &&
-                    _isCurrentUserSender)
-                  SenderActionsCard(
-                    onCalendarPressed: () {
-                      // TODO: Navigate to calendar
-                    },
-                    onChatPressed: () {
-                      // TODO: Navigate to chat
-                    },
-                    onLocationPressed: () async {
-                      try {
-                        if (currentWorkDetails.workLocation != null && 
-                            currentWorkDetails.workLocation!.isNotEmpty) {
-                          // Si on a une adresse textuelle, on l'utilise
-                          await MapUtils.openGoogleMapsWithAddress(currentWorkDetails.workLocation!);
-                        } else {
-                          Get.snackbar(
-                            'Information',
-                            'Aucune localisation disponible',
-                            backgroundColor: Colors.orange.shade100,
-                            colorText: Colors.black,
-                          );
-                        }
-                      } catch (e) {
-                        Get.snackbar(
-                          'Erreur',
-                          'Impossible d\'ouvrir la carte : $e',
-                          backgroundColor: Colors.red.shade100,
-                          colorText: Colors.black,
-                        );
-                      }
-                    },
-                  ),
-                // const SizedBox(height: 100),
-              ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildStatusCard() {
+    Color statusColor;
+    String statusText;
+    IconData statusIcon;
+
+    switch (currentProposal.status) {
+      case 'pending':
+        statusColor = Colors.orange.shade600;
+        statusText = 'En attente';
+        statusIcon = Iconsax.clock;
+        break;
+      case 'accepted':
+        statusColor = Colors.green.shade600;
+        statusText = 'Acceptée';
+        statusIcon = Iconsax.tick_circle;
+        break;
+      case 'rejected':
+        statusColor = Colors.red.shade600;
+        statusText = 'Rejetée';
+        statusIcon = Iconsax.close_circle;
+        break;
+      default:
+        statusColor = Colors.grey.shade600;
+        statusText = 'Statut inconnu';
+        statusIcon = Iconsax.info_circle;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              statusIcon,
+              color: statusColor,
+              size: 24,
             ),
           ),
-        ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Statut de la proposition',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                statusText,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: statusColor,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 90)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.deepPurple,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black,
+  Widget _buildReceiverActions() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Actions sur cette proposition',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade800,
             ),
           ),
-          child: child!,
-        );
-      },
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _updateProposalStatus('rejected'),
+                  icon: const Icon(Iconsax.close_circle, size: 18),
+                  label: const Text('Rejeter'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    side: BorderSide(color: Colors.red.shade300),
+                    foregroundColor: Colors.red.shade600,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _updateProposalStatus('accepted'),
+                  icon: const Icon(Iconsax.tick_circle, size: 18),
+                  label: const Text('Accepter'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
-
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
   }
 
-  Future<void> _selectTime() async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.deepPurple,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black,
+  Widget _buildAcceptedActions() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green.shade200),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Iconsax.tick_circle,
+                  color: Colors.green.shade600,
+                  size: 48,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Proposition acceptée',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Colors.green.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Cette proposition a été acceptée. Vous pouvez maintenant contacter le prestataire.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.green.shade600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
           ),
-          child: child!,
-        );
-      },
+        ],
+      ),
     );
-
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-      });
-    }
   }
 
-  Future<void> _scheduleWork() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_selectedDate == null || _selectedTime == null) {
-      Get.snackbar(
-        'Information',
-        'Veuillez sélectionner une date et une heure',
-        backgroundColor: Colors.orange.shade100,
-        colorText: Colors.black,
-      );
-      return;
-    }
-
-    try {
-      // _updateProposalStatus('planned');
-
-      await _workController
-          .scheduleWork(
-            announcementId: currentProposal.announcementId,
-            proposalId: currentProposal.id,
-            clientId: _announcement?.creatorId ?? 'unknown',
-            providerId: currentProposal.userId,
-            scheduledDate: _selectedDate!,
-            scheduledTime: _selectedTime!.toString(),
-            workLocation: _locationController.text.trim(),
-            additionalNotes: _notesController.text.trim(),
-          )
-          .then((workDetailId) async {
-            // Update the proposal status to 'planned'
-            await _updateProposalStatus(
-              currentProposal.status,
-              workDetailId: workDetailId,
-            );
-          });
-
-      Get.snackbar(
-        'Succès',
-        'Travail planifié avec succès !',
-        backgroundColor: Colors.green.shade100,
-        colorText: Colors.black,
-      );
-
-      // Retour à la page précédente
-      Get.back();
-    } catch (e) {
-      Get.snackbar(
-        'Erreur',
-        'Erreur lors de la planification : $e',
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.black,
-      );
-    }
+  Widget _buildRejectedStatus() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.red.shade200),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Iconsax.close_circle,
+              color: Colors.red.shade600,
+              size: 48,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Proposition rejetée',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                color: Colors.red.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Cette proposition a été rejetée.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.red.shade600,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildSenderPendingActions() {
@@ -442,7 +695,7 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
                   onPressed: () {
                     _showCancelConfirmationDialog();
                   },
-                  icon: Icon(Iconsax.trash, size: 18),
+                  icon: const Icon(Iconsax.trash, size: 18),
                   label: const Text('Annuler'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -458,7 +711,6 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // TODO: Navigate to edit proposal screen
                     Get.snackbar(
                       'Information',
                       'Fonctionnalité de modification à venir',
@@ -522,9 +774,10 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
     );
   }
 
+  // Supprimons les méthodes inutiles
   Future<void> _cancelProposal() async {
     try {
-      await _proposalController.deleteProposal(currentProposal.id);
+      await _proposalService.deleteProposal(currentProposal.id);
       
       Get.snackbar(
         'Succès',
@@ -545,36 +798,33 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
     }
   }
 
-  Future<void> _updateProposalStatus(
-    String newStatus, {
-    String? workDetailId,
-  }) async {
+  Future<void> _updateProposalStatus(String newStatus) async {
     try {
-      await _proposalController.updateProposalStatus(
-        currentProposal.id,
-        newStatus,
-        workDetailId: workDetailId,
-      );
+      if (newStatus == 'accepted') {
+        await _proposalService.acceptProposal(currentProposal.id);
+      } else if (newStatus == 'rejected') {
+        await _proposalService.rejectProposal(currentProposal.id);
+      }
 
       Get.snackbar(
         'Succès',
-        'Proposition ${newStatus} avec succès',
+        'Proposition ${newStatus == 'accepted' ? 'acceptée' : 'rejetée'} avec succès',
         backgroundColor: Colors.green.shade100,
         colorText: Colors.black,
       );
 
       // Mettre à jour l'état local
       setState(() {
-        // Update currentProposal status
-        currentProposal = Proposal(
+        currentProposal = ProposalModel(
           id: currentProposal.id,
           announcementId: currentProposal.announcementId,
-          userId: currentProposal.userId,
-          userEmail: currentProposal.userEmail,
+          providerId: currentProposal.providerId,
           message: currentProposal.message,
-          createdAt: currentProposal.createdAt,
+          amount: currentProposal.amount,
           status: newStatus,
-          workDetailId: workDetailId ?? "",
+          createdAt: currentProposal.createdAt,
+          provider: currentProposal.provider,
+          announcement: currentProposal.announcement,
         );
       });
     } catch (e) {

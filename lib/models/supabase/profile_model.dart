@@ -24,7 +24,11 @@ class ProfileModel {
   String get fullName => '$firstName $lastName';
 
   /// Initiales de l'utilisateur
-  String get initials => '${firstName[0]}${lastName[0]}';
+  String get initials {
+    String firstInitial = firstName.isNotEmpty ? firstName[0].toUpperCase() : '';
+    String lastInitial = lastName.isNotEmpty ? lastName[0].toUpperCase() : '';
+    return '$firstInitial$lastInitial';
+  }
 
   /// Ville de l'utilisateur (si location disponible)
   String? get city => location?['city'];

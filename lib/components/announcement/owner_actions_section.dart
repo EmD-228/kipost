@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:kipost/controllers/announcement_controller.dart';
+import 'package:kipost/services/announcement_service.dart';
 import 'package:kipost/models/supabase/supabase_models.dart';
 import 'package:kipost/screens/announcement/proposals_screen.dart';
 
 class OwnerActionsSection extends StatelessWidget {
   final AnnouncementModel announcement;
+  final AnnouncementService _announcementService = AnnouncementService();
 
-  const OwnerActionsSection({
+  OwnerActionsSection({
     super.key,
     required this.announcement,
   });
@@ -212,7 +213,7 @@ class OwnerActionsSection extends StatelessWidget {
     );
 
     if (confirm == true) {
-      await Get.find<AnnouncementController>().deleteAnnouncement(announcement.id);
+      await _announcementService.deleteAnnouncement(announcement.id);
       Get.back();
     }
   }

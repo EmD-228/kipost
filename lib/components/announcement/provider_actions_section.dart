@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:kipost/controllers/proposal_controller.dart';
+import 'package:kipost/services/proposal_service.dart';
 import 'package:kipost/models/supabase/supabase_models.dart';
 import 'package:kipost/utils/app_status.dart';
 import 'package:kipost/components/announcement/proposal_dialog.dart';
 
 class ProviderActionsSection extends StatelessWidget {
   final AnnouncementModel announcement;
+  final ProposalService _proposalService = ProposalService();
 
-  const ProviderActionsSection({super.key, required this.announcement});
+  ProviderActionsSection({super.key, required this.announcement});
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +31,7 @@ class ProviderActionsSection extends StatelessWidget {
 
         if (announcement.status == AnnouncementStatus.active)
           FutureBuilder<bool>(
-            future: Get.put(
-              ProposalController(),
-            ).hasUserAlreadyApplied(announcement.id),
+            future: _proposalService.hasUserAlreadyApplied(announcement.id),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Container(

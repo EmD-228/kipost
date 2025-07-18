@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:kipost/controllers/auth_controller.dart';
 import 'package:kipost/models/supabase/supabase_models.dart';
 import 'package:kipost/services/announcement_service.dart';
+import 'package:kipost/services/auth_service.dart';
 import 'package:kipost/components/announcement/announcement_widgets.dart';
 
 class AnnouncementDetailScreen extends StatefulWidget {
@@ -16,6 +16,7 @@ class AnnouncementDetailScreen extends StatefulWidget {
 
 class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
   final AnnouncementService _announcementService = AnnouncementService();
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -110,8 +111,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
 
   List<Widget> _buildUserActions(AnnouncementModel ann) {
     // Check if current user is the owner using correct property names
-    final isOwner =
-        Get.find<AuthController>().firebaseUser.value?.uid == ann.clientId;
+    final isOwner = _authService.currentUser?.id == ann.clientId;
 
     if (isOwner) {
       return [OwnerActionsSection(announcement: ann)];

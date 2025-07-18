@@ -230,6 +230,62 @@ class ProposalService {
     }
   }
 
+  /// Vérifie si l'utilisateur actuel a déjà postulé pour une annonce
+  Future<bool> hasUserAlreadyApplied(String announcementId) async {
+    final currentUser = _client.auth.currentUser;
+    if (currentUser == null) {
+      return false;
+    }
+
+    try {
+      final response = await _client
+          .from('proposals')
+          .select('id')
+          .eq('announcement_id', announcementId)
+          .eq('provider_id', currentUser.id)
+          .maybeSingle();
+
+      return response != null;
+    } catch (e) {
+      throw Exception('Erreur lors de la vérification de candidature: $e');
+    }
+  }
+
+  /// Envoie une proposition simple avec message
+  Future<String> sendProposal({
+    required String announcementId,
+    required String message,
+    double? proposedPrice,
+  }) async {
+    final currentUser = _client.auth.currentUser;
+    if (currentUser == null) {
+      throw Exception('Utilisateur non connecté');
+    }
+
+    try {
+      final proposalData = <String, dynamic>{
+        'announcement_id': announcementId,
+        'provider_id': currentUser.id,
+        'message': message,
+        'status': 'pending',
+      };
+
+      if (proposedPrice != null) {
+        proposalData['amount'] = proposedPrice;
+      }
+
+      final response = await _client
+          .from('proposals')
+          .insert(proposalData)
+          .select()
+          .single();
+
+      return response['id'];
+    } catch (e) {
+      throw Exception('Erreur lors de l\'envoi de la proposition: $e');
+    }
+  }
+
   /// Écoute les changements de propositions en temps réel pour une annonce
   Stream<List<ProposalModel>> watchProposalsForAnnouncement(String announcementId) {
     return _client

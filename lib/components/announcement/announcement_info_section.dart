@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:kipost/models/supabase/supabase_models.dart';
 
@@ -46,7 +47,7 @@ class AnnouncementInfoSection extends StatelessWidget {
                 icon: Iconsax.category,
                 color: Colors.blue,
                 label: 'Catégorie',
-                value: announcement.category,
+                value: announcement.category.capitalizeFirst!,
               ),
               const SizedBox(height: 12),
               _buildInfoRow(
