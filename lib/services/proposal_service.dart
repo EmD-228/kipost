@@ -1,3 +1,4 @@
+import 'package:logger/logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/supabase/supabase_models.dart';
 import 'supabase_service.dart';
@@ -36,6 +37,7 @@ class ProposalService {
 
       return response['id'];
     } catch (e) {
+      Logger().e('Erreur lors de la création de la proposition: $e');
       throw Exception('Erreur lors de la création de la proposition: $e');
     }
   }
@@ -51,6 +53,7 @@ class ProposalService {
 
       return response.map((data) => ProposalModel.fromMap(data)).toList();
     } catch (e) {
+      Logger().e('Erreur lors de la récupération des propositions: $e');
       throw Exception('Erreur lors de la récupération des propositions: $e');
     }
   }
@@ -71,6 +74,7 @@ class ProposalService {
 
       return response.map((data) => ProposalModel.fromMap(data)).toList();
     } catch (e) {
+      Logger().e('Erreur lors de la récupération des propositions: $e');
       throw Exception('Erreur lors de la récupération des propositions: $e');
     }
   }
@@ -95,6 +99,7 @@ class ProposalService {
 
       return response.map((data) => ProposalModel.fromMap(data)).toList();
     } catch (e) {
+      Logger().e('Erreur lors de la récupération des propositions reçues: $e');
       throw Exception('Erreur lors de la récupération des propositions reçues: $e');
     }
   }
@@ -110,6 +115,7 @@ class ProposalService {
 
       return ProposalModel.fromMap(response);
     } catch (e) {
+      Logger().e('Erreur lors de la récupération de la proposition: $e');
       throw Exception('Erreur lors de la récupération de la proposition: $e');
     }
   }
@@ -141,6 +147,7 @@ class ProposalService {
             .eq('provider_id', currentUser.id);
       }
     } catch (e) {
+      Logger().e('Erreur lors de la mise à jour de la proposition: $e');
       throw Exception('Erreur lors de la mise à jour de la proposition: $e');
     }
   }
@@ -159,12 +166,34 @@ class ProposalService {
         throw Exception('Proposition non trouvée');
       }
 
-      // Démarrer une transaction pour accepter la proposition et rejeter les autres
-      await _client.rpc('accept_proposal', params: {
-        'proposal_id': proposalId,
-        'client_id': currentUser.id,
-      });
+      // Vérifier que l'utilisateur est bien le propriétaire de l'annonce
+      if (proposal.announcement?.clientId != currentUser.id) {
+        throw Exception('Vous n\'êtes pas autorisé à accepter cette proposition');
+      }
+
+      // Accepter la proposition
+      await _client
+          .from('proposals')
+          .update({'status': 'accepted'})
+          .eq('id', proposalId);
+
+      // Mettre à jour l'annonce avec le prestataire sélectionné et changer son statut
+      await _client
+          .from('announcements')
+          .update({
+            'status': 'inactive', // Utiliser 'inactive' temporairement jusqu'à ce que 'assigned' soit autorisé
+            'selected_provider_id': proposal.providerId,
+          })
+          .eq('id', proposal.announcementId);
+
+      // Rejeter automatiquement toutes les autres propositions pour cette annonce
+      await _client
+          .from('proposals')
+          .update({'status': 'rejected'})
+          .eq('announcement_id', proposal.announcementId)
+          .neq('id', proposalId);
     } catch (e) {
+      Logger().e('Erreur lors de l\'acceptation de la proposition: $e');
       throw Exception('Erreur lors de l\'acceptation de la proposition: $e');
     }
   }
@@ -190,6 +219,7 @@ class ProposalService {
           .update(updateData)
           .eq('id', proposalId);
     } catch (e) {
+      Logger().e('Erreur lors du rejet de la proposition: $e');
       throw Exception('Erreur lors du rejet de la proposition: $e');
     }
   }
@@ -208,6 +238,7 @@ class ProposalService {
           .eq('id', proposalId)
           .eq('provider_id', currentUser.id);
     } catch (e) {
+      Logger().e('Erreur lors du retrait de la proposition: $e');
       throw Exception('Erreur lors du retrait de la proposition: $e');
     }
   }
@@ -226,6 +257,7 @@ class ProposalService {
           .eq('id', proposalId)
           .eq('provider_id', currentUser.id);
     } catch (e) {
+      Logger().e('Erreur lors de la suppression de la proposition: $e');
       throw Exception('Erreur lors de la suppression de la proposition: $e');
     }
   }
@@ -247,6 +279,7 @@ class ProposalService {
 
       return response != null;
     } catch (e) {
+      Logger().e('Erreur lors de la vérification de candidature: $e');
       throw Exception('Erreur lors de la vérification de candidature: $e');
     }
   }
@@ -282,6 +315,7 @@ class ProposalService {
 
       return response['id'];
     } catch (e) {
+      Logger().e('Erreur lors de l\'envoi de la proposition: $e');
       throw Exception('Erreur lors de l\'envoi de la proposition: $e');
     }
   }

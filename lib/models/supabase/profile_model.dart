@@ -8,6 +8,9 @@ class ProfileModel {
   final double? averageRating;
   final bool isVerified;
   final DateTime createdAt;
+  final List<String>? skills;
+  final List<String>? portfolioImages;
+  final int? completedContracts;
 
   ProfileModel({
     required this.id,
@@ -18,6 +21,9 @@ class ProfileModel {
     this.averageRating,
     this.isVerified = false,
     required this.createdAt,
+    this.skills,
+    this.portfolioImages,
+    this.completedContracts,
   });
 
   /// Nom complet de l'utilisateur
@@ -53,6 +59,9 @@ class ProfileModel {
       averageRating: map['average_rating']?.toDouble(),
       isVerified: map['is_verified'] ?? false,
       createdAt: DateTime.parse(map['created_at']),
+      skills: map['skills'] != null ? List<String>.from(map['skills']) : null,
+      portfolioImages: map['portfolio_images'] != null ? List<String>.from(map['portfolio_images']) : null,
+      completedContracts: map['completed_contracts'],
     );
   }
 
@@ -64,6 +73,9 @@ class ProfileModel {
       'avatar_url': avatarUrl,
       'location': location,
       'is_verified': isVerified,
+      'skills': skills,
+      'portfolio_images': portfolioImages,
+      'completed_contracts': completedContracts,
     };
   }
 
@@ -75,6 +87,9 @@ class ProfileModel {
     Map<String, dynamic>? location,
     double? averageRating,
     bool? isVerified,
+    List<String>? skills,
+    List<String>? portfolioImages,
+    int? completedContracts,
   }) {
     return ProfileModel(
       id: id,
@@ -85,6 +100,9 @@ class ProfileModel {
       averageRating: averageRating ?? this.averageRating,
       isVerified: isVerified ?? this.isVerified,
       createdAt: createdAt,
+      skills: skills ?? this.skills,
+      portfolioImages: portfolioImages ?? this.portfolioImages,
+      completedContracts: completedContracts ?? this.completedContracts,
     );
   }
 

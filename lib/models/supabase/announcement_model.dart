@@ -11,6 +11,7 @@ class AnnouncementModel {
   final double? budget;
   final String urgency;
   final String status;
+  final String? selectedProviderId;
   final DateTime createdAt;
   final ProfileModel? client;
 
@@ -24,6 +25,7 @@ class AnnouncementModel {
     this.budget,
     this.urgency = 'Modéré',
     this.status = 'active',
+    this.selectedProviderId,
     required this.createdAt,
     this.client,
   });
@@ -69,6 +71,7 @@ class AnnouncementModel {
       budget: map['budget']?.toDouble(),
       urgency: map['urgency'] ?? 'Modéré',
       status: map['status'] ?? 'active',
+      selectedProviderId: map['selected_provider_id'],
       createdAt: DateTime.parse(map['created_at']),
       client: client,
     );
@@ -85,6 +88,7 @@ class AnnouncementModel {
       'budget': budget,
       'urgency': urgency,
       'status': status,
+      'selected_provider_id': selectedProviderId,
     };
   }
 
@@ -97,6 +101,7 @@ class AnnouncementModel {
     double? budget,
     String? urgency,
     String? status,
+    String? selectedProviderId,
     ProfileModel? client,
   }) {
     return AnnouncementModel(
@@ -109,6 +114,7 @@ class AnnouncementModel {
       budget: budget ?? this.budget,
       urgency: urgency ?? this.urgency,
       status: status ?? this.status,
+      selectedProviderId: selectedProviderId ?? this.selectedProviderId,
       createdAt: createdAt,
       client: client ?? this.client,
     );
