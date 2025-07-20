@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:kipost/models/supabase/supabase_models.dart';
 
 /// Widget pour les actions disponibles lorsqu'une proposition est acceptée
 class AcceptedActionsCard extends StatelessWidget {
-  const AcceptedActionsCard({super.key});
+  final ProposalModel? proposal;
+  final AnnouncementModel? announcement;
+  final bool isCurrentUserClient;
+  final VoidCallback? onCreateContract;
+
+  const AcceptedActionsCard({
+    super.key,
+    this.proposal,
+    this.announcement,
+    this.isCurrentUserClient = false,
+    this.onCreateContract,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +61,9 @@ class AcceptedActionsCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Cette proposition a été acceptée. Vous pouvez maintenant contacter le prestataire.',
+                  isCurrentUserClient
+                      ? 'Vous avez accepté cette proposition. Vous pouvez maintenant créer un contrat.'
+                      : 'Cette proposition a été acceptée. Vous pouvez maintenant contacter le client.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.green.shade600,
@@ -59,6 +73,34 @@ class AcceptedActionsCard extends StatelessWidget {
               ],
             ),
           ),
+
+          // Bouton pour créer un contrat (seulement pour le client)
+          if (isCurrentUserClient && proposal != null && announcement != null) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: onCreateContract,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue.shade600,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                icon: const Icon(Iconsax.document),
+                label: const Text(
+                  'Créer un contrat',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

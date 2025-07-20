@@ -87,14 +87,25 @@ class ProposalService {
     }
 
     try {
+      // D'abord récupérer les IDs des annonces du client
+      final announcementsResponse = await _client
+          .from('announcements')
+          .select('id')
+          .eq('client_id', currentUser.id);
+
+      if (announcementsResponse.isEmpty) {
+        return [];
+      }
+
+      final announcementIds = announcementsResponse
+          .map((announcement) => announcement['id'] as String)
+          .toList();
+
+      // Ensuite récupérer les propositions pour ces annonces
       final response = await _client
           .from('proposals')
-          .select('''
-            *, 
-            provider:profiles!provider_id(*), 
-            announcement:announcements!announcement_id(*)
-          ''')
-          .eq('announcement.client_id', currentUser.id)
+          .select('*, provider:profiles!provider_id(*), announcement:announcements!announcement_id(*)')
+          .inFilter('announcement_id', announcementIds)
           .order('created_at', ascending: false);
 
       return response.map((data) => ProposalModel.fromMap(data)).toList();
@@ -111,7 +122,11 @@ class ProposalService {
           .from('proposals')
           .select('*, provider:profiles!provider_id(*), announcement:announcements!announcement_id(*)')
           .eq('id', proposalId)
-          .single();
+          .maybeSingle();
+
+      if (response == null) {
+        return null;
+      }
 
       return ProposalModel.fromMap(response);
     } catch (e) {
@@ -172,16 +187,21 @@ class ProposalService {
       }
 
       // Accepter la proposition
-      await _client
+      final acceptResult = await _client
           .from('proposals')
           .update({'status': 'accepted'})
-          .eq('id', proposalId);
+          .eq('id', proposalId)
+          .select();
+      
+      if (acceptResult.isEmpty) {
+        throw Exception('Impossible de mettre à jour la proposition');
+      }
 
       // Mettre à jour l'annonce avec le prestataire sélectionné et changer son statut
       await _client
           .from('announcements')
           .update({
-            'status': 'inactive', // Utiliser 'inactive' temporairement jusqu'à ce que 'assigned' soit autorisé
+            'status': 'assigned',
             'selected_provider_id': proposal.providerId,
           })
           .eq('id', proposal.announcementId);
@@ -192,6 +212,7 @@ class ProposalService {
           .update({'status': 'rejected'})
           .eq('announcement_id', proposal.announcementId)
           .neq('id', proposalId);
+
     } catch (e) {
       Logger().e('Erreur lors de l\'acceptation de la proposition: $e');
       throw Exception('Erreur lors de l\'acceptation de la proposition: $e');

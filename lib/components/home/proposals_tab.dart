@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:iconsax/iconsax.dart';
-import 'package:kipost/models/tab_config.dart';
-import 'package:kipost/components/home/tab_header.dart';
+import 'package:kipost/theme/app_colors.dart';
+import 'package:kipost/components/text/app_text.dart';
 import 'package:kipost/components/proposals/proposal_widgets.dart';
 
 class ProposalsTab extends StatefulWidget {
@@ -12,45 +11,81 @@ class ProposalsTab extends StatefulWidget {
 }
 
 class _ProposalsTabState extends State<ProposalsTab>
-    with AutomaticKeepAliveClientMixin {
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
 
   @override
-  bool get wantKeepAlive => true;
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
 
-  // Configuration des onglets de propositions
-  List<TabConfig> _getProposalTabs() {
-    return [
-      TabConfig(icon: Iconsax.send_1, label: 'Envoyées'),
-      TabConfig(icon: Iconsax.receive_square, label: 'Reçues'),
-    ];
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
-    print('🔍 DEBUG: ProposalsTab build called');
-
     return SafeArea(
-      child: DefaultTabController(
-        length: 2,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TabHeader(
-              title: 'Mes Propositions',
-              icon: Iconsax.note_2,
-              tabs: _getProposalTabs(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppText.heading2(
+                  'Mes Propositions',
+                  color: AppColors.onSurface,
+                ),
+                const SizedBox(height: 8),
+                AppText.body(
+                  'Suivez vos propositions envoyées et reçues',
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ],
             ),
-            const Expanded(
-              child: TabBarView(
-                children: [
-                  SentProposalsTab(),
-                  ReceivedProposalsTab(),
-                ],
+          ),
+          
+          // Tabs
+          Container(
+            color: Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: AppColors.primary,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.onSurfaceVariant,
+              labelStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.normal,
+              ),
+              tabs: const [
+                Tab(text: 'Envoyées'),
+                Tab(text: 'Reçues'),
+              ],
             ),
-          ],
-        ),
+          ),
+          
+          // Tab Views
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: const [
+                SentProposalsTab(),
+                ReceivedProposalsTab(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

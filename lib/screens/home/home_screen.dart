@@ -3,6 +3,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:get/get.dart';
 import 'package:kipost/components/home/jobs_tab.dart';
 import 'package:kipost/components/home/proposals_tab.dart';
+import 'package:kipost/components/home/contracts_tab.dart';
 import 'package:kipost/components/home/profile_tab.dart';
 import 'package:kipost/components/home/feature_tabs.dart';
 import 'package:kipost/components/home/nav_icon.dart';
@@ -35,8 +36,10 @@ class _MyHomePageState extends State<MyHomePage> {
       case 1:
         return const ProposalsTab();
       case 2:
-        return const CalendrierTab();
+        return const ContractsTab();
       case 3:
+        return const CalendrierTab();
+      case 4:
         return const ProfileTab();
       default:
         return const JobsTab();
@@ -124,7 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: () => Get.toNamed('/create-announcement'),
                 ),
               )
-              : _selectedIndex == 2
+              : _selectedIndex == 3
               ? Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -206,8 +209,16 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             BottomNavigationBarItem(
               icon: NavIcon(
-                icon: Iconsax.calendar,
+                icon: Iconsax.document_text,
                 index: 2,
+                selectedIndex: _selectedIndex,
+              ),
+              label: 'Contrats',
+            ),
+            BottomNavigationBarItem(
+              icon: NavIcon(
+                icon: Iconsax.calendar,
+                index: 3,
                 selectedIndex: _selectedIndex,
               ),
               label: 'Calendrier',
@@ -215,7 +226,7 @@ class _MyHomePageState extends State<MyHomePage> {
             BottomNavigationBarItem(
               icon: NavIcon(
                 icon: Iconsax.user,
-                index: 3,
+                index: 4,
                 selectedIndex: _selectedIndex,
               ),
               label: 'Profil',

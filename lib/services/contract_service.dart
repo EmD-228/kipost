@@ -8,6 +8,45 @@ class ContractService {
   
   SupabaseClient get _client => _supabaseService.client;
 
+  /// Créer un nouveau contrat après acceptation d'une proposition
+  Future<ContractModel> createContract({
+    required String announcementId,
+    required String proposalId,
+    required String clientId,
+    required String providerId,
+    required double finalPrice,
+    DateTime? startTime,
+    String? estimatedDuration,
+    Map<String, dynamic>? finalLocation,
+    String? notes,
+  }) async {
+    try {
+      final response = await _client.from('contracts').insert({
+        'announcement_id': announcementId,
+        'proposal_id': proposalId,
+        'client_id': clientId,
+        'provider_id': providerId,
+        'final_price': finalPrice,
+        'start_time': startTime?.toIso8601String(),
+        'estimated_duration': estimatedDuration,
+        'final_location': finalLocation,
+        'notes': notes,
+        'status': 'pending_approval',
+        'payment_status': 'pending',
+      }).select('''
+        *,
+        client:profiles!client_id(*),
+        provider:profiles!provider_id(*),
+        announcement:announcements!announcement_id(*),
+        proposal:proposals!proposal_id(*)
+      ''').single();
+
+      return ContractModel.fromMap(response);
+    } catch (e) {
+      throw Exception('Erreur lors de la création du contrat: $e');
+    }
+  }
+
   /// Récupère un contrat par son ID
   Future<ContractModel?> getContract(String contractId) async {
     try {

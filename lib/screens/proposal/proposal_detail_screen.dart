@@ -6,6 +6,7 @@ import 'package:kipost/services/proposal_service.dart';
 import 'package:kipost/services/announcement_service.dart';
 import 'package:kipost/services/auth_service.dart';
 import 'package:kipost/components/proposal_detail/proposal_detail_widgets.dart';
+import 'package:kipost/components/contract/create_contract_bottom_sheet.dart';
 
 class ProposalDetailScreen extends StatefulWidget {
   final ProposalModel proposal;
@@ -42,6 +43,7 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
     super.initState();
     // Initialize currentProposal with the proposal passed in widget
     currentProposal = widget.proposal;
+    getCurrentProposal();
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -68,7 +70,7 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
       final announcement = await _announcementService.getAnnouncement(
         currentProposal.announcementId,
       );
-      
+
       setState(() {
         _announcement = announcement;
         _isLoading = false;
@@ -79,6 +81,17 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
         _isLoading = false;
       });
     }
+  }
+
+  getCurrentProposal() async {
+    await _proposalService.getProposal(widget.proposal.id).then((onValue) {
+      setState(() {
+        currentProposal =
+            onValue!; // Ensure currentProposal is updated with the fetched proposal
+
+        printInfo(info: 'Current Proposal: ${currentProposal.toMap()}');
+      });
+    });
   }
 
   @override
@@ -110,7 +123,6 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    printInfo(info: 'Current Proposal: ${currentProposal.toMap()}');
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -128,57 +140,62 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
           ),
         ),
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Message de candidature
-                      ProposalMessageCard(proposal: currentProposal),
-                      const SizedBox(height: 20),
-
-                      // Informations du postulant
-                      ProviderInfoCard(proposal: currentProposal),
-                      const SizedBox(height: 20),
-
-                      // Informations sur l'annonce
-                      if (_announcement != null)
-                        AnnouncementInfoCard(announcement: _announcement!),
-                      if (_announcement != null)
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Message de candidature
+                        ProposalMessageCard(proposal: currentProposal),
                         const SizedBox(height: 20),
 
-                      // Statut de la proposition
-                      ProposalStatusCard(proposal: currentProposal),
-                      const SizedBox(height: 20),
+                        // Informations du postulant
+                        ProviderInfoCard(proposal: currentProposal),
+                        const SizedBox(height: 20),
 
-                      // Actions selon le statut
-                      if (currentProposal.status == 'pending' && _isCurrentUserReceiver)
-                        ReceiverActionsCard(
-                          onAccept: () => _handleAcceptProposal(),
-                          onReject: () => _handleRejectProposal(),
-                        ),
-                      if (currentProposal.status == 'pending' && _isCurrentUserSender)
-                        SenderPendingActionsCard(
-                          onCancel: () => _handleCancelProposal(),
-                          onEdit: () => _handleEditProposal(),
-                        ),
-                      if (currentProposal.status == 'accepted')
-                        const AcceptedActionsCard(),
-                      if (currentProposal.status == 'rejected')
-                        const RejectedStatusCard(),
-                    ],
+                        // Informations sur l'annonce
+                        if (_announcement != null)
+                          AnnouncementInfoCard(announcement: _announcement!),
+                        if (_announcement != null) const SizedBox(height: 20),
+
+                        // Statut de la proposition
+                        ProposalStatusCard(proposal: currentProposal),
+                        const SizedBox(height: 20),
+
+                        // Actions selon le statut
+                        if (currentProposal.status == 'pending' &&
+                            _isCurrentUserReceiver)
+                          ReceiverActionsCard(
+                            onAccept: () => _handleAcceptProposal(),
+                            onReject: () => _handleRejectProposal(),
+                          ),
+                        if (currentProposal.status == 'pending' &&
+                            _isCurrentUserSender)
+                          SenderPendingActionsCard(
+                            onCancel: () => _handleCancelProposal(),
+                            onEdit: () => _handleEditProposal(),
+                          ),
+                        // if (currentProposal.status == 'accepted')
+                          AcceptedActionsCard(
+                            proposal: currentProposal,
+                            announcement: _announcement,
+                            isCurrentUserClient: _isCurrentUserReceiver,
+                            onCreateContract: () => _handleCreateContract(),
+                          ),
+                        if (currentProposal.status == 'rejected')
+                          const RejectedStatusCard(),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
     );
   }
 
@@ -210,10 +227,26 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
     );
   }
 
+  void _handleCreateContract() {
+    if (_announcement != null) {
+      showCreateContractBottomSheet(
+        proposal: currentProposal,
+        announcement: _announcement!,
+      );
+    } else {
+      Get.snackbar(
+        'Erreur',
+        'Impossible de créer le contrat. Données de l\'annonce manquantes.',
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.black,
+      );
+    }
+  }
+
   Future<void> _cancelProposal() async {
     try {
       await _proposalService.deleteProposal(currentProposal.id);
-      
+
       Get.snackbar(
         'Succès',
         'Proposition annulée avec succès',
@@ -237,12 +270,15 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
     try {
       if (newStatus == 'accepted') {
         await _proposalService.acceptProposal(currentProposal.id);
-        
-        // Recharger les données de l'annonce car elle a été mise à jour
-        await _loadAnnouncementData();
       } else if (newStatus == 'rejected') {
         await _proposalService.rejectProposal(currentProposal.id);
       }
+
+      // Recharger les données complètes de la proposition depuis la base de données
+      await getCurrentProposal();
+      
+      // Recharger les données de l'annonce car elle peut avoir été mise à jour
+      await _loadAnnouncementData();
 
       Get.snackbar(
         'Succès',
@@ -251,20 +287,6 @@ class _ProposalDetailScreenState extends State<ProposalDetailScreen>
         colorText: Colors.black,
       );
 
-      // Mettre à jour l'état local
-      setState(() {
-        currentProposal = ProposalModel(
-          id: currentProposal.id,
-          announcementId: currentProposal.announcementId,
-          providerId: currentProposal.providerId,
-          message: currentProposal.message,
-          amount: currentProposal.amount,
-          status: newStatus,
-          createdAt: currentProposal.createdAt,
-          provider: currentProposal.provider,
-          announcement: currentProposal.announcement,
-        );
-      });
     } catch (e) {
       Get.snackbar(
         'Erreur',
